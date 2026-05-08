@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>公益捐赠溯源平台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <h1>区块链多品类捐赠全流程溯源系统</h1>
+        <p class="description">建立公开透明的捐赠物资监管闭环，支持多方状态跟踪与链上不可篡改校验。</p>
+        <nav>
+          <a href="{{ url_for('index') }}">首页</a>
+          <a href="{{ url_for('donate') }}">捐赠登记</a>
+          <a href="{{ url_for('admin') }}">机构管理</a>
+          <a href="{{ url_for('receive') }}">签收确认</a>
+          <a href="{{ url_for('track') }}">实时溯源</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <div class="container">
+        <p>系统基于 Python Flask 和本地区块链仿真实现，上链链下分离，支持多方可溯源捐赠闭环。</p>
+      </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

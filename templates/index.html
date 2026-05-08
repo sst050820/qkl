@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero-card">
+  <div class="hero-card-info">
+    <h2>平台概览</h2>
+    <p>实时呈现捐赠物资全流程状态统计，支持链上完整性校验与可追溯查询。</p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-title">当前区块高度</span>
+      <strong>{{ block_height }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-title">已登记物品</span>
+      <strong>{{ total_items }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-title">链完整性</span>
+      <strong class="badge {{ 'badge-success' if valid_chain else 'badge-danger' }}">{{ '通过' if valid_chain else '异常' }}</strong>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <h3>最新链上活动</h3>
+  {% if recent_events %}
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr><th>时间</th><th>溯源码</th><th>状态</th><th>类别</th><th>备注</th></tr>
+      </thead>
+      <tbody>
+      {% for event in recent_events %}
+      <tr>
+        <td>{{ event.timestamp }}</td>
+        <td>{{ event.data.tracking_id }}</td>
+        <td><span class="badge badge-info">{{ event.data.status }}</span></td>
+        <td>{{ event.data.item_type }}</td>
+        <td>{{ event.data.note }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>当前尚无捐赠记录，请先完成捐赠登记。</p>
+  {% endif %}
+</div>
+{% endblock %}

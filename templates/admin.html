@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>公益机构管理</h2>
+  <p>在此页面对已登记物品进行验收、分拣、出库等状态更新。</p>
+  <form method="get" class="search-row">
+    <input type="text" name="query" placeholder="搜索溯源码 / 类型 / 捐赠者" value="{{ query or '' }}" />
+    <select name="status">
+      <option value="">全部状态</option>
+      {% for status in states %}
+      <option value="{{ status }}" {% if filter_status == status %}selected{% endif %}>{{ status }}</option>
+      {% endfor %}
+    </select>
+    <input type="submit" value="筛选" />
+  </form>
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr><th>溯源码</th><th>类别</th><th>状态</th><th>捐赠者</th><th>更新时间</th><th>下一步</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+      {% for item in items %}
+      <tr>
+        <td><a href="{{ url_for('track') }}?tracking_id={{ item.tracking_id }}">{{ item.tracking_id }}</a></td>
+        <td>{{ item.item_type }}</td>
+        <td><span class="badge badge-info">{{ item.status }}</span></td>
+        <td>{{ item.donor_name }}</td>
+        <td>{{ item.updated_at }}</td>
+        <td>{{ item.next_state or '无' }}</td>
+        <td>
+          {% if item.next_state %}
+          <form method="post" style="margin:0; display:inline-block;">
+            <input type="hidden" name="tracking_id" value="{{ item.tracking_id }}" />
+            <input type="hidden" name="current_state" value="{{ item.status }}" />
+            <button type="submit">更新为 {{ item.next_state }}</button>
+          </form>
+          {% else %}
+          <span class="badge badge-success">已完成</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if not items %}
+  <p class="helper-text">暂无匹配记录，可调整筛选条件或检查溯源码是否正确。</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>受赠方签收</h2>
+  <p>输入溯源码查询当前物品状态，确认收到后完成上链签收记录。</p>
+  <form method="get" class="search-row">
+    <input type="text" name="tracking_id" value="{{ tracking_id }}" placeholder="请输入溯源码" />
+    <input type="submit" value="查询" />
+  </form>
+
+  {% if item %}
+  <div class="item-summary">
+    {% if photo_url %}
+    <img class="preview-image" src="{{ photo_url }}" alt="物品照片" />
+    {% endif %}
+    <div>
+      <p><strong>当前状态：</strong>{{ item.event.status }}</p>
+      <p><strong>物品类别：</strong>{{ item.event.item_type }}</p>
+      <p><strong>捐赠者：</strong>{{ item.event.donor_name }}</p>
+      <p><strong>备注：</strong>{{ item.event.note }}</p>
+      {% if recipient %}
+      <p><strong>历史签收：</strong>{{ recipient.recipient_name }} / {{ recipient.recipient_code }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% if item.event.status == '运送中' %}
+  <form method="post">
+    <input type="hidden" name="tracking_id" value="{{ tracking_id }}" />
+    <label>受赠方姓名</label>
+    <input type="text" name="recipient_name" placeholder="例如：山区学校编号-1002" />
+    <label>受赠方编号</label>
+    <input type="text" name="recipient_code" placeholder="请填写受赠方编号" />
+    <label>收货地址</label>
+    <input type="text" name="address" placeholder="受赠地点/地址" />
+    <input type="submit" value="确认签收" />
+  </form>
+  {% else %}
+  <p class="helper-text">当前物品尚未处于“运送中”状态，无法签收。请联系机构端继续推进流程。</p>
+  {% endif %}
+  {% elif tracking_id %}
+  <p class="helper-text">未找到该溯源码的上链记录，请确认输入是否正确。</p>
+  {% endif %}
+</div>
+{% endblock %}

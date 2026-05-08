@@ -1,0 +1,212 @@
+[
+  {
+    "index": 0,
+    "timestamp": "2026-05-05 17:18:00",
+    "data": {
+      "type": "genesis",
+      "message": "公益捐赠溯源系统创世区块",
+      "status": "初始化"
+    },
+    "previous_hash": "0",
+    "nonce": 9270,
+    "hash": "000a1e896697c4bf96b0bd19452b92d0866a3179c6ed17407a4458a76c4c6252"
+  },
+  {
+    "index": 1,
+    "timestamp": "2026-05-05 17:19:59",
+    "data": {
+      "type": "donation",
+      "tracking_id": "A27BB9416C",
+      "item_type": "衣物",
+      "condition": "九成新",
+      "donor_name": "张**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "待接收",
+      "note": "捐赠发起，等待机构验收",
+      "receiver": ""
+    },
+    "previous_hash": "000a1e896697c4bf96b0bd19452b92d0866a3179c6ed17407a4458a76c4c6252",
+    "nonce": 599,
+    "hash": "0006229c1915172dc4bd7ad2dcfb432a574fa94d8ff2b61b0369782fadde94f7"
+  },
+  {
+    "index": 2,
+    "timestamp": "2026-05-05 17:19:59",
+    "data": {
+      "type": "donation",
+      "tracking_id": "A27BB9416C",
+      "item_type": "衣物",
+      "condition": "九成新",
+      "donor_name": "张**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "处理中",
+      "note": "机构操作：状态更新为 处理中",
+      "receiver": ""
+    },
+    "previous_hash": "0006229c1915172dc4bd7ad2dcfb432a574fa94d8ff2b61b0369782fadde94f7",
+    "nonce": 279,
+    "hash": "000892aafcd9e4f9e1b963e9358c3c6a441cb3f6e5cb4005c68d2af9117813af"
+  },
+  {
+    "index": 3,
+    "timestamp": "2026-05-05 17:20:21",
+    "data": {
+      "type": "donation",
+      "tracking_id": "934F5C8498",
+      "item_type": "图书",
+      "condition": "全新",
+      "donor_name": "李**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "待接收",
+      "note": "捐赠发起，等待机构验收",
+      "receiver": ""
+    },
+    "previous_hash": "000892aafcd9e4f9e1b963e9358c3c6a441cb3f6e5cb4005c68d2af9117813af",
+    "nonce": 5559,
+    "hash": "000caa0d3b2c04f839872784e2ac7b318ab7dd120f653dafba420a0f7dece15f"
+  },
+  {
+    "index": 4,
+    "timestamp": "2026-05-05 17:20:21",
+    "data": {
+      "type": "donation",
+      "tracking_id": "934F5C8498",
+      "item_type": "图书",
+      "condition": "全新",
+      "donor_name": "李**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "处理中",
+      "note": "机构操作：状态更新为 处理中",
+      "receiver": ""
+    },
+    "previous_hash": "000caa0d3b2c04f839872784e2ac7b318ab7dd120f653dafba420a0f7dece15f",
+    "nonce": 298,
+    "hash": "000d9aeed24fa6db7878f34f1ee8a095489f6ead29fc9d35b0ab2859b84169e6"
+  },
+  {
+    "index": 5,
+    "timestamp": "2026-05-05 17:20:21",
+    "data": {
+      "type": "donation",
+      "tracking_id": "934F5C8498",
+      "item_type": "图书",
+      "condition": "全新",
+      "donor_name": "李**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "已分拣",
+      "note": "机构操作：状态更新为 已分拣",
+      "receiver": ""
+    },
+    "previous_hash": "000d9aeed24fa6db7878f34f1ee8a095489f6ead29fc9d35b0ab2859b84169e6",
+    "nonce": 1073,
+    "hash": "0009baf4e0219d8bb7056acd78ff48c33d7ec0cb61f0245a0d4091e518a878a6"
+  },
+  {
+    "index": 6,
+    "timestamp": "2026-05-05 17:20:21",
+    "data": {
+      "type": "donation",
+      "tracking_id": "934F5C8498",
+      "item_type": "图书",
+      "condition": "全新",
+      "donor_name": "李**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "运送中",
+      "note": "机构操作：状态更新为 运送中",
+      "receiver": ""
+    },
+    "previous_hash": "0009baf4e0219d8bb7056acd78ff48c33d7ec0cb61f0245a0d4091e518a878a6",
+    "nonce": 7884,
+    "hash": "0001dc2f9ba6518ef1e8359d8da505ab3768b5fbef684dd90a7d607475d7e08d"
+  },
+  {
+    "index": 7,
+    "timestamp": "2026-05-05 17:20:21",
+    "data": {
+      "type": "donation",
+      "tracking_id": "934F5C8498",
+      "item_type": "图书",
+      "condition": "全新",
+      "donor_name": "李**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "已签收",
+      "note": "机构操作：状态更新为 已签收",
+      "receiver": ""
+    },
+    "previous_hash": "0001dc2f9ba6518ef1e8359d8da505ab3768b5fbef684dd90a7d607475d7e08d",
+    "nonce": 1155,
+    "hash": "00013db803284cded281d5866f96fdbe21f0ac25ef1093fb22be9f1a9d399074"
+  },
+  {
+    "index": 8,
+    "timestamp": "2026-05-08 13:15:32",
+    "data": {
+      "type": "donation",
+      "tracking_id": "A27BB9416C",
+      "item_type": "衣物",
+      "condition": "九成新",
+      "donor_name": "张**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "已分拣",
+      "note": "机构操作：状态更新为 已分拣",
+      "receiver": ""
+    },
+    "previous_hash": "00013db803284cded281d5866f96fdbe21f0ac25ef1093fb22be9f1a9d399074",
+    "nonce": 3327,
+    "hash": "000a4d56622c01bec0c28562adfcd65b06509f89a077a35c09d7aa69c8328f16"
+  },
+  {
+    "index": 9,
+    "timestamp": "2026-05-08 13:15:34",
+    "data": {
+      "type": "donation",
+      "tracking_id": "A27BB9416C",
+      "item_type": "衣物",
+      "condition": "九成新",
+      "donor_name": "张**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "运送中",
+      "note": "机构操作：状态更新为 运送中",
+      "receiver": ""
+    },
+    "previous_hash": "000a4d56622c01bec0c28562adfcd65b06509f89a077a35c09d7aa69c8328f16",
+    "nonce": 10197,
+    "hash": "00006ba7e7127f065a180b406b1e3638641b64d72da91f2b8d3753570ad7a8ed"
+  },
+  {
+    "index": 10,
+    "timestamp": "2026-05-08 13:15:36",
+    "data": {
+      "type": "donation",
+      "tracking_id": "A27BB9416C",
+      "item_type": "衣物",
+      "condition": "九成新",
+      "donor_name": "张**",
+      "photo_hash": "b4869fd5b4bcc343f46c1508694b59c1033accae248f17495eab461c6dadcb89",
+      "status": "已签收",
+      "note": "机构操作：状态更新为 已签收",
+      "receiver": ""
+    },
+    "previous_hash": "00006ba7e7127f065a180b406b1e3638641b64d72da91f2b8d3753570ad7a8ed",
+    "nonce": 415,
+    "hash": "0006f29cedd6a8b6bdb68ea1c20f16fd622de26d60bbdd27ff55e5235c2b7d90"
+  },
+  {
+    "index": 11,
+    "timestamp": "2026-05-08 13:55:23",
+    "data": {
+      "type": "donation",
+      "tracking_id": "7894D53BAF",
+      "item_type": "生活用品",
+      "condition": "轻微使用",
+      "donor_name": "2**",
+      "photo_hash": "c9f9615fe983390b94807a4f0fbf9982a3b839c3ee6e8c0806f4051f899d7240",
+      "status": "待接收",
+      "note": "捐赠发起，等待机构验收",
+      "receiver": ""
+    },
+    "previous_hash": "0006f29cedd6a8b6bdb68ea1c20f16fd622de26d60bbdd27ff55e5235c2b7d90",
+    "nonce": 1990,
+    "hash": "000520868b74c993c715c592bb3d194fd1790b086368a9a7320b4970dedc1072"
+  }
+]
