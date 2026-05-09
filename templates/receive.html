@@ -2,6 +2,7 @@
 {% block content %}
 <div class="card">
   <h2>受赠方签收</h2>
+  <p><a href="{{ url_for('user_portal') }}">← 返回用户入口</a></p>
   <p>输入溯源码查询当前物品状态，确认收到后完成上链签收记录。</p>
   <form method="get" class="search-row">
     <input type="text" name="tracking_id" value="{{ tracking_id }}" placeholder="请输入溯源码" />

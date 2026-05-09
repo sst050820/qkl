@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>普通用户入口</h2>
+  {% if current_role == 'donor' %}
+  <p>当前已登录为捐赠方，您可前往捐赠登记页面。</p>
+  <div class="action-grid">
+    <a class="action-card" href="{{ url_for('donate') }}">
+      <strong>前往捐赠登记</strong>
+      <p>提交物品信息并生成溯源码。</p>
+    </a>
+  </div>
+  {% elif current_role == 'recipient' %}
+  <p>当前已登录为受赠方，您可前往签收确认页面。</p>
+  <div class="action-grid">
+    <a class="action-card" href="{{ url_for('receive') }}">
+      <strong>前往签收确认</strong>
+      <p>查询溯源码并完成接收签收。</p>
+    </a>
+  </div>
+  {% else %}
+  <p>当前账号不属于普通用户角色，若需进入普通用户功能请使用 donor 或 recipient 账号登录。</p>
+  {% endif %}
+</div>
+{% endblock %}

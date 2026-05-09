@@ -208,5 +208,77 @@
     "previous_hash": "0006f29cedd6a8b6bdb68ea1c20f16fd622de26d60bbdd27ff55e5235c2b7d90",
     "nonce": 1990,
     "hash": "000520868b74c993c715c592bb3d194fd1790b086368a9a7320b4970dedc1072"
+  },
+  {
+    "index": 12,
+    "timestamp": "2026-05-09 03:50:50",
+    "data": {
+      "type": "donation",
+      "tracking_id": "7894D53BAF",
+      "item_type": "生活用品",
+      "condition": "轻微使用",
+      "donor_name": "2**",
+      "photo_hash": "c9f9615fe983390b94807a4f0fbf9982a3b839c3ee6e8c0806f4051f899d7240",
+      "status": "处理中",
+      "note": "机构操作：状态更新为 处理中",
+      "receiver": ""
+    },
+    "previous_hash": "000520868b74c993c715c592bb3d194fd1790b086368a9a7320b4970dedc1072",
+    "nonce": 2315,
+    "hash": "00085191fa1631609386dbf413c3c524c6cafa3c6f0dd37767ed88f0b95b712e"
+  },
+  {
+    "index": 13,
+    "timestamp": "2026-05-09 03:50:51",
+    "data": {
+      "type": "donation",
+      "tracking_id": "7894D53BAF",
+      "item_type": "生活用品",
+      "condition": "轻微使用",
+      "donor_name": "2**",
+      "photo_hash": "c9f9615fe983390b94807a4f0fbf9982a3b839c3ee6e8c0806f4051f899d7240",
+      "status": "已分拣",
+      "note": "机构操作：状态更新为 已分拣",
+      "receiver": ""
+    },
+    "previous_hash": "00085191fa1631609386dbf413c3c524c6cafa3c6f0dd37767ed88f0b95b712e",
+    "nonce": 10142,
+    "hash": "0006f7168585d2168fe015918b713ccf8b3f55f42cd800b334e7bde64dfc8642"
+  },
+  {
+    "index": 14,
+    "timestamp": "2026-05-09 03:50:52",
+    "data": {
+      "type": "donation",
+      "tracking_id": "7894D53BAF",
+      "item_type": "生活用品",
+      "condition": "轻微使用",
+      "donor_name": "2**",
+      "photo_hash": "c9f9615fe983390b94807a4f0fbf9982a3b839c3ee6e8c0806f4051f899d7240",
+      "status": "运送中",
+      "note": "机构操作：状态更新为 运送中",
+      "receiver": ""
+    },
+    "previous_hash": "0006f7168585d2168fe015918b713ccf8b3f55f42cd800b334e7bde64dfc8642",
+    "nonce": 25319,
+    "hash": "0000708964cde231c4d292862e54c6e2cf66ff650eab24edba585b312a351f8a"
+  },
+  {
+    "index": 15,
+    "timestamp": "2026-05-09 03:51:16",
+    "data": {
+      "type": "donation",
+      "tracking_id": "7894D53BAF",
+      "item_type": "生活用品",
+      "condition": "轻微使用",
+      "donor_name": "2**",
+      "photo_hash": "c9f9615fe983390b94807a4f0fbf9982a3b839c3ee6e8c0806f4051f899d7240",
+      "status": "已签收",
+      "note": "受赠方签收确认：222 / 2222",
+      "receiver": "22**"
+    },
+    "previous_hash": "0000708964cde231c4d292862e54c6e2cf66ff650eab24edba585b312a351f8a",
+    "nonce": 7278,
+    "hash": "000b1b5a68427122188d3aedb62be24799aa61a80137600cc98dba4b52fec302"
   }
 ]

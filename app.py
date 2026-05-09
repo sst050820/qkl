@@ -1,7 +1,8 @@
 import hashlib
 import os
 import uuid
-from flask import Flask, flash, redirect, render_template, request, url_for
+from functools import wraps
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 from config import ALLOWED_EXTENSIONS, DATABASE_PATH, SECRET_KEY, UPLOAD_FOLDER
 from blockchain import Blockchain
@@ -14,6 +15,12 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+
+USER_ACCOUNTS = {
+    "admin": {"password": "admin123", "role": "admin"},
+    "donor": {"password": "donor123", "role": "donor"},
+    "recipient": {"password": "recipient123", "role": "recipient"},
+}
 
 chain = Blockchain()
 init_db()
@@ -60,6 +67,69 @@ def build_photo_url(donor):
     return None
 
 
+def authenticate_user(username, password):
+    account = USER_ACCOUNTS.get(username)
+    if not account:
+        return None
+    if password == account["password"]:
+        return {"username": username, "role": account["role"]}
+    return None
+
+
+def login_required(required_role=None):
+    def decorator(view):
+        @wraps(view)
+        def wrapped_view(*args, **kwargs):
+            if not session.get("logged_in"):
+                flash("请先登录。", "warning")
+                return redirect(url_for("login", next=request.path))
+            if required_role and session.get("role") != required_role:
+                flash("当前账号无权访问该页面。", "danger")
+                return redirect(url_for("index"))
+            return view(*args, **kwargs)
+        return wrapped_view
+    return decorator
+
+
+@app.context_processor
+def inject_user():
+    return {
+        "current_user": session.get("username"),
+        "current_role": session.get("role"),
+    }
+
+
+def safe_redirect_target(target):
+    if target and target.startswith("/"):
+        return target
+    return url_for("index")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    next_target = request.args.get("next", "")
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        next_target = request.form.get("next", "")
+        user = authenticate_user(username, password)
+        if user:
+            session["logged_in"] = True
+            session["username"] = user["username"]
+            session["role"] = user["role"]
+            flash("登录成功。", "success")
+            return redirect(safe_redirect_target(next_target))
+        flash("用户名或密码错误。", "danger")
+    return render_template("login.html", next=next_target)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("已退出登录。", "info")
+    return redirect(url_for("index"))
+
+
 @app.route("/")
 def index():
     summary = summarize_trackings()
@@ -82,7 +152,25 @@ def index():
     )
 
 
+@app.route("/user-portal")
+@app.route("/user")
+@login_required()
+def user_portal():
+    return render_template("user_portal.html")
+
+
+@app.route("/donor")
+def donor():
+    return redirect(url_for("donate"))
+
+
+@app.route("/recipient")
+def recipient():
+    return redirect(url_for("receive"))
+
+
 @app.route("/donate", methods=["GET", "POST"])
+@login_required("donor")
 def donate():
     if request.method == "POST":
         donor_name = request.form.get("donor_name", "匿名").strip()
@@ -124,6 +212,7 @@ def donate():
 
 
 @app.route("/admin", methods=["GET", "POST"])
+@login_required("admin")
 def admin():
     if request.method == "POST":
         tracking_id = request.form.get("tracking_id")
@@ -181,6 +270,7 @@ def admin():
 
 
 @app.route("/receive", methods=["GET", "POST"])
+@login_required("recipient")
 def receive():
     tracking_id = request.values.get("tracking_id", "").strip().upper()
     item = None
