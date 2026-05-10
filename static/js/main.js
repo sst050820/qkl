@@ -27,4 +27,15 @@ window.addEventListener('DOMContentLoaded', function () {
       }
     });
   }
+
+  document.querySelectorAll('.toggle-history').forEach((button) => {
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      const targetId = this.dataset.target;
+      const panel = document.getElementById(targetId);
+      if (panel) {
+        panel.classList.toggle('hidden-row');
+      }
+    });
+  });
 });

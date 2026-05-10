@@ -238,6 +238,33 @@ table tbody tr:hover {
   font-size: 0.95rem;
   color: #475569;
 }
+.hidden-row {
+  display: none;
+}
+.history-panel {
+  background: #f8fbff;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  padding: 18px;
+}
+.history-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.history-header img {
+  max-width: 120px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+}
+.recipient-summary {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #dbeafe;
+}
 footer {
   text-align: center;
   margin-top: 42px;

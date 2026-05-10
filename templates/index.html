@@ -21,22 +21,56 @@
   </div>
 </div>
 <div class="card">
-
-  <h3>最新链上活动</h3>
-  {% if recent_events %}
+  <h3>所有登记物品状态</h3>
+  {% if items %}
   <div class="table-responsive">
     <table>
       <thead>
-        <tr><th>时间</th><th>溯源码</th><th>状态</th><th>类别</th><th>备注</th></tr>
+        <tr><th>溯源码</th><th>状态</th><th>类别</th><th>捐赠者</th><th>新旧程度</th><th>更新时间</th><th>操作</th></tr>
       </thead>
       <tbody>
-      {% for event in recent_events %}
+      {% for item in items %}
       <tr>
-        <td>{{ event.timestamp }}</td>
-        <td>{{ event.data.tracking_id }}</td>
-        <td><span class="badge badge-info">{{ event.data.status }}</span></td>
-        <td>{{ event.data.item_type }}</td>
-        <td>{{ event.data.note }}</td>
+        <td>{{ item.tracking_id }}</td>
+        <td><span class="badge badge-info">{{ item.status }}</span></td>
+        <td>{{ item.item_type }}</td>
+        <td>{{ item.donor_name }}</td>
+        <td>{{ item.condition }}</td>
+        <td>{{ item.updated_at }}</td>
+        <td><a href="#" class="action-link toggle-history" data-target="history-{{ item.tracking_id }}">查看历史</a></td>
+      </tr>
+      <tr class="history-row hidden-row" id="history-{{ item.tracking_id }}">
+        <td colspan="7">
+          <div class="history-panel">
+            <div class="history-header">
+              <strong>溯源码 {{ item.tracking_id }} 历史记录</strong>
+              {% if item.photo_url %}
+              <img class="preview-image" src="{{ item.photo_url }}" alt="物品照片" />
+              {% endif %}
+            </div>
+            <div class="timeline">
+              {% for record in item.history %}
+              <div class="timeline-item">
+                <div class="timeline-icon"></div>
+                <div>
+                  <p class="timeline-time">{{ record.timestamp }}</p>
+                  <p><strong>{{ record.event.status }}</strong> / {{ record.event.item_type }}</p>
+                  <p>{{ record.event.note or '无备注' }}</p>
+                  {% if record.event.receiver %}
+                  <p><strong>受赠方：</strong>{{ record.event.receiver }}</p>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% if item.recipient %}
+            <div class="recipient-summary">
+              <p><strong>最后确认受赠方：</strong>{{ item.recipient.recipient_name }} / {{ item.recipient.recipient_code }}</p>
+              <p><strong>签收地址：</strong>{{ item.recipient.address }}</p>
+            </div>
+            {% endif %}
+          </div>
+        </td>
       </tr>
       {% endfor %}
       </tbody>

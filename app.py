@@ -3,11 +3,20 @@ import os
 import uuid
 from functools import wraps
 from flask import Flask, flash, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from config import ALLOWED_EXTENSIONS, DATABASE_PATH, SECRET_KEY, UPLOAD_FOLDER
 from blockchain import Blockchain
 from contracts import STATES, build_event, next_state, validate_transition
-from database import get_donor_by_tracking, get_recipient_by_tracking, init_db, save_donor, save_recipient
+from database import (
+    get_donor_by_tracking,
+    get_recipient_by_tracking,
+    get_user_by_username,
+    init_db,
+    save_donor,
+    save_recipient,
+    save_user,
+)
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -68,6 +77,12 @@ def build_photo_url(donor):
 
 
 def authenticate_user(username, password):
+    user = get_user_by_username(username)
+    if user:
+        if check_password_hash(user["password_hash"], password):
+            return {"username": user["username"], "role": user["role"]}
+        return None
+
     account = USER_ACCOUNTS.get(username)
     if not account:
         return None
@@ -105,6 +120,34 @@ def safe_redirect_target(target):
     return url_for("index")
 
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+        role = request.form.get("role", "donor").strip()
+        if not username or not password or not confirm_password:
+            flash("请填写完整注册信息。", "warning")
+            return redirect(url_for("register"))
+        if password != confirm_password:
+            flash("两次输入的密码不一致。", "warning")
+            return redirect(url_for("register"))
+        if role not in ["donor", "recipient"]:
+            role = "donor"
+        if get_user_by_username(username) or username in USER_ACCOUNTS:
+            flash("用户名已存在，请更换用户名。", "warning")
+            return redirect(url_for("register"))
+        password_hash = generate_password_hash(password)
+        save_user(username, password_hash, role)
+        session["logged_in"] = True
+        session["username"] = username
+        session["role"] = role
+        flash("注册成功，已自动登录。", "success")
+        return redirect(url_for("user_portal"))
+    return render_template("register.html")
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     next_target = request.args.get("next", "")
@@ -135,20 +178,36 @@ def index():
     summary = summarize_trackings()
     total_items = len(summary)
     status_count = {state: 0 for state in STATES}
-    for block in summary.values():
-        status = block.data.get("status")
+    items = []
+    for track_id, block in summary.items():
+        data = block.data
+        status = data.get("status")
         if status in status_count:
             status_count[status] += 1
-    recent_events = chain.get_all_events()[-5:][::-1]
-    last_event = recent_events[0] if recent_events else None
+        donor = get_donor_by_tracking(track_id)
+        recipient = get_recipient_by_tracking(track_id)
+        items.append(
+            {
+                "tracking_id": track_id,
+                "status": status,
+                "item_type": data.get("item_type", "未知"),
+                "condition": data.get("condition", "未知"),
+                "donor_name": data.get("donor_name", "匿名"),
+                "updated_at": block.timestamp,
+                "note": data.get("note", ""),
+                "history": chain.get_item_history(track_id),
+                "recipient": recipient,
+                "photo_url": build_photo_url(donor),
+            }
+        )
+    items.sort(key=lambda x: x["updated_at"], reverse=True)
     return render_template(
         "index.html",
         block_height=len(chain.chain) - 1,
         total_items=total_items,
-        last_event=last_event,
         status_count=status_count,
         valid_chain=chain.is_valid_chain(),
-        recent_events=recent_events,
+        items=items,
     )
 
 

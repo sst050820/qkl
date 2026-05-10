@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 from config import DATABASE_PATH
 
 
@@ -37,8 +38,50 @@ def init_db():
         "confirmed_at TEXT"
         ")"
     )
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS users ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "username TEXT UNIQUE, "
+        "password_hash TEXT, "
+        "role TEXT, "
+        "created_at TEXT"
+        ")"
+    )
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        "INSERT OR IGNORE INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+        ("admin", generate_password_hash("admin123"), "admin", now),
+    )
+    cursor.execute(
+        "INSERT OR IGNORE INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+        ("donor", generate_password_hash("donor123"), "donor", now),
+    )
+    cursor.execute(
+        "INSERT OR IGNORE INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+        ("recipient", generate_password_hash("recipient123"), "recipient", now),
+    )
     conn.commit()
     conn.close()
+
+
+def save_user(username, password_hash, role):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+        (username, password_hash, role, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_user_by_username(username):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
 
 
 def save_donor(tracking_id, donor_name, phone, item_type, condition, photo_hash, photo_filename):
