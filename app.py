@@ -18,32 +18,39 @@ from database import (
     save_user,
 )
 
+# 确保上传目录存在
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# 创建 Flask 应用实例
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 限制上传文件大小为 5MB
 
+# 默认用户账户，用于向后兼容
 USER_ACCOUNTS = {
     "admin": {"password": "admin123", "role": "admin"},
     "donor": {"password": "donor123", "role": "donor"},
     "recipient": {"password": "recipient123", "role": "recipient"},
 }
 
+# 初始化区块链实例
 chain = Blockchain()
+# 初始化数据库
 init_db()
 
 
 def allowed_file(filename):
+    """检查文件扩展名是否在允许列表中。"""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def compute_hash(path):
+    """计算文件的 SHA-256 哈希值，用于验证文件完整性。"""
     hasher = hashlib.sha256()
     with open(path, "rb") as file:
         while True:
-            chunk = file.read(8192)
+            chunk = file.read(8192)  # 分块读取，提高效率
             if not chunk:
                 break
             hasher.update(chunk)
@@ -51,38 +58,45 @@ def compute_hash(path):
 
 
 def mask_name(name):
+    """对捐赠者姓名进行脱敏处理（简化版，用于前端显示）。"""
     if not name:
         return "匿名捐赠"
     return name[0] + "**" if len(name.strip()) > 1 else "*"
 
 
 def summarize_trackings():
+    """汇总所有跟踪 ID 的最新区块信息。"""
     summary = {}
     for block in chain.chain:
         data = block.data
         tracking_id = data.get("tracking_id")
         if tracking_id:
-            summary[tracking_id] = block
+            summary[tracking_id] = block  # 保留最新的区块（遍历顺序）
     return summary
 
 
 def get_latest_event(tracking_id):
+    """获取指定跟踪 ID 的最新事件。"""
     return chain.get_latest_item(tracking_id)
 
 
 def build_photo_url(donor):
+    """根据捐赠者信息构建照片 URL。"""
     if donor and donor.get("photo_filename"):
         return url_for("static", filename=f"uploads/{donor['photo_filename']}")
     return None
 
 
 def authenticate_user(username, password):
+    """验证用户登录，支持数据库用户和默认用户。"""
+    # 首先尝试从数据库查找用户
     user = get_user_by_username(username)
     if user:
         if check_password_hash(user["password_hash"], password):
             return {"username": user["username"], "role": user["role"]}
         return None
 
+    # 如果数据库中没有，尝试默认账户
     account = USER_ACCOUNTS.get(username)
     if not account:
         return None
@@ -92,6 +106,7 @@ def authenticate_user(username, password):
 
 
 def login_required(required_role=None):
+    """装饰器：要求用户登录，并可选检查角色权限。"""
     def decorator(view):
         @wraps(view)
         def wrapped_view(*args, **kwargs):
@@ -108,6 +123,7 @@ def login_required(required_role=None):
 
 @app.context_processor
 def inject_user():
+    """Flask 上下文处理器：在所有模板中注入当前用户信息。"""
     return {
         "current_user": session.get("username"),
         "current_role": session.get("role"),
@@ -115,6 +131,7 @@ def inject_user():
 
 
 def safe_redirect_target(target):
+    """安全重定向目标验证，确保只重定向到内部路径。"""
     if target and target.startswith("/"):
         return target
     return url_for("index")
@@ -122,6 +139,7 @@ def safe_redirect_target(target):
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """用户注册路由。"""
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
@@ -150,6 +168,7 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """用户登录路由，支持重定向到之前的页面。"""
     next_target = request.args.get("next", "")
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -168,6 +187,7 @@ def login():
 
 @app.route("/logout")
 def logout():
+    """用户登出路由。"""
     session.clear()
     flash("已退出登录。", "info")
     return redirect(url_for("index"))
@@ -175,6 +195,7 @@ def logout():
 
 @app.route("/")
 def index():
+    """首页路由，显示捐赠物品概览和统计信息。"""
     summary = summarize_trackings()
     total_items = len(summary)
     status_count = {state: 0 for state in STATES}
@@ -215,22 +236,26 @@ def index():
 @app.route("/user")
 @login_required()
 def user_portal():
+    """用户门户页面，根据角色显示不同内容。"""
     return render_template("user_portal.html")
 
 
 @app.route("/donor")
 def donor():
+    """捐赠者重定向到捐赠页面。"""
     return redirect(url_for("donate"))
 
 
 @app.route("/recipient")
 def recipient():
+    """受赠者重定向到签收页面。"""
     return redirect(url_for("receive"))
 
 
 @app.route("/donate", methods=["GET", "POST"])
 @login_required("donor")
 def donate():
+    """捐赠页面：允许捐赠者提交捐赠物品信息和照片。"""
     if request.method == "POST":
         donor_name = request.form.get("donor_name", "匿名").strip()
         phone = request.form.get("phone", "").strip()
@@ -245,14 +270,17 @@ def donate():
             flash("仅支持 PNG/JPG/GIF 图片格式。", "warning")
             return redirect(url_for("donate"))
 
+        # 生成唯一跟踪 ID
         tracking_id = str(uuid.uuid4()).replace("-", "")[:10].upper()
         filename = f"{tracking_id}_{secure_filename(file.filename)}"
         save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(save_path)
         photo_hash = compute_hash(save_path)
 
+        # 保存到数据库
         save_donor(tracking_id, donor_name, phone, item_type, condition, photo_hash, filename)
 
+        # 创建区块链事件
         event = build_event(
             tracking_id=tracking_id,
             item_type=item_type,
@@ -273,6 +301,7 @@ def donate():
 @app.route("/admin", methods=["GET", "POST"])
 @login_required("admin")
 def admin():
+    """管理员页面：管理捐赠物品状态，支持搜索和过滤。"""
     if request.method == "POST":
         tracking_id = request.form.get("tracking_id")
         current_state = request.form.get("current_state")
@@ -301,6 +330,7 @@ def admin():
         flash(f"物品 {tracking_id} 状态已更新为：{next_step}", "success")
         return redirect(url_for("admin"))
 
+    # 处理 GET 请求：显示物品列表，支持搜索和状态过滤
     query = request.args.get("query", "").strip()
     filter_status = request.args.get("status", "")
     records = summarize_trackings()
@@ -308,10 +338,12 @@ def admin():
     for track_id, block in records.items():
         latest = block.to_dict()
         latest["event"] = block.data
+        # 搜索过滤：跟踪 ID、物品类型、捐赠者姓名
         if query:
             query_text = query.lower()
             if query_text not in track_id.lower() and query_text not in latest["event"]["item_type"].lower() and query_text not in latest["event"]["donor_name"].lower():
                 continue
+        # 状态过滤
         if filter_status and latest["event"]["status"] != filter_status:
             continue
         items.append(
@@ -331,6 +363,7 @@ def admin():
 @app.route("/receive", methods=["GET", "POST"])
 @login_required("recipient")
 def receive():
+    """签收页面：允许受赠者确认物品签收。"""
     tracking_id = request.values.get("tracking_id", "").strip().upper()
     item = None
     donor = None
@@ -359,8 +392,10 @@ def receive():
             flash("当前物品尚未进入运送阶段，请先由机构端更新状态。", "warning")
             return redirect(url_for("receive", tracking_id=tracking_id))
 
+        # 保存签收信息到数据库
         save_recipient(tracking_id, recipient_name, recipient_code, address)
         donor = get_donor_by_tracking(tracking_id)
+        # 创建签收事件并添加到区块链
         event = build_event(
             tracking_id=tracking_id,
             item_type=donor["item_type"] if donor else "未知",
@@ -386,6 +421,7 @@ def receive():
 
 @app.route("/track", methods=["GET", "POST"])
 def track():
+    """追踪页面：公开查询捐赠物品的完整历史记录。"""
     tracking_id = request.values.get("tracking_id", "").strip().upper()
     history = []
     valid = True
@@ -408,5 +444,7 @@ def track():
         photo_url=photo_url,
     )
 
+
 if __name__ == "__main__":
+    # 启动 Flask 开发服务器
     app.run(host="0.0.0.0", port=5000, debug=True)

@@ -280,5 +280,95 @@
     "previous_hash": "0000708964cde231c4d292862e54c6e2cf66ff650eab24edba585b312a351f8a",
     "nonce": 7278,
     "hash": "000b1b5a68427122188d3aedb62be24799aa61a80137600cc98dba4b52fec302"
+  },
+  {
+    "index": 16,
+    "timestamp": "2026-05-10 12:26:52",
+    "data": {
+      "type": "donation",
+      "tracking_id": "5B80A373EE",
+      "item_type": "衣物",
+      "condition": "全新",
+      "donor_name": "匿名捐赠",
+      "photo_hash": "6d04357a9c6cb3e05118743de4572f51e2a33664536b0e889a228451bfea404b",
+      "status": "待接收",
+      "note": "捐赠发起，等待机构验收",
+      "receiver": ""
+    },
+    "previous_hash": "000b1b5a68427122188d3aedb62be24799aa61a80137600cc98dba4b52fec302",
+    "nonce": 6640,
+    "hash": "0008d94bec5d5b28f6303da3c356e2dbf1a5c1d5546d6cf35d046552377fd266"
+  },
+  {
+    "index": 17,
+    "timestamp": "2026-05-10 12:28:49",
+    "data": {
+      "type": "donation",
+      "tracking_id": "5B80A373EE",
+      "item_type": "衣物",
+      "condition": "全新",
+      "donor_name": "匿名捐赠",
+      "photo_hash": "6d04357a9c6cb3e05118743de4572f51e2a33664536b0e889a228451bfea404b",
+      "status": "处理中",
+      "note": "机构操作：状态更新为 处理中",
+      "receiver": ""
+    },
+    "previous_hash": "0008d94bec5d5b28f6303da3c356e2dbf1a5c1d5546d6cf35d046552377fd266",
+    "nonce": 622,
+    "hash": "00019dbdd512aca20984752183728e1872b06821c32054cdfb9f7df82adf2dea"
+  },
+  {
+    "index": 18,
+    "timestamp": "2026-05-10 12:28:53",
+    "data": {
+      "type": "donation",
+      "tracking_id": "5B80A373EE",
+      "item_type": "衣物",
+      "condition": "全新",
+      "donor_name": "匿名捐赠",
+      "photo_hash": "6d04357a9c6cb3e05118743de4572f51e2a33664536b0e889a228451bfea404b",
+      "status": "已分拣",
+      "note": "机构操作：状态更新为 已分拣",
+      "receiver": ""
+    },
+    "previous_hash": "00019dbdd512aca20984752183728e1872b06821c32054cdfb9f7df82adf2dea",
+    "nonce": 1598,
+    "hash": "000a5282ec914da8d512e8d00fb03f84273dcf047dc93eec272f5e41662730cb"
+  },
+  {
+    "index": 19,
+    "timestamp": "2026-05-10 12:33:11",
+    "data": {
+      "type": "donation",
+      "tracking_id": "5B80A373EE",
+      "item_type": "衣物",
+      "condition": "全新",
+      "donor_name": "匿名捐赠",
+      "photo_hash": "6d04357a9c6cb3e05118743de4572f51e2a33664536b0e889a228451bfea404b",
+      "status": "运送中",
+      "note": "机构操作：状态更新为 运送中",
+      "receiver": ""
+    },
+    "previous_hash": "000a5282ec914da8d512e8d00fb03f84273dcf047dc93eec272f5e41662730cb",
+    "nonce": 5008,
+    "hash": "000be1deddca0434b6988a228016a125d39bbb2bc467e8001b29486bc0b84717"
+  },
+  {
+    "index": 20,
+    "timestamp": "2026-05-10 12:34:37",
+    "data": {
+      "type": "donation",
+      "tracking_id": "5B80A373EE",
+      "item_type": "衣物",
+      "condition": "全新",
+      "donor_name": "匿名捐赠",
+      "photo_hash": "6d04357a9c6cb3e05118743de4572f51e2a33664536b0e889a228451bfea404b",
+      "status": "已签收",
+      "note": "受赠方签收确认：王二 / 123456",
+      "receiver": "王二**"
+    },
+    "previous_hash": "000be1deddca0434b6988a228016a125d39bbb2bc467e8001b29486bc0b84717",
+    "nonce": 568,
+    "hash": "0003279c4a6043b83dcf066d23a78ea6464e45300361b969be2ef3d91f10c04a"
   }
 ]
