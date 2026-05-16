@@ -1,251 +1,326 @@
 # 区块链多品类捐赠全流程溯源系统
 
-基于 Python Flask 的公益捐赠溯源系统，采用本地链上/链下结合设计，实现捐赠物资从发起、验收、分发、签收、查询的全流程记录与不可篡改校验。
+基于 Python Flask 的公益捐赠溯源系统，结合本地链上账本与 Hyperledger Fabric 链码查询，支持捐赠登记、验收、分发、签收、溯源查询等业务流程。
 
 ## 项目结构
 
-- `app.py` - Flask 应用入口，包含前端页面路由和业务流程。
-- `blockchain.py` - 区块链仿真核心，包含区块结构、hash 计算、PoW 链式存储和数据持久化。
-- `contracts.py` - 业务状态机规则，定义捐赠物品状态流转、状态校验和脱敏规则。
-- `database.py` - 链下 SQLite 数据库操作，存储捐赠者信息和签收记录。
-- `config.py` - 全局配置文件。
-- `data/chain_data.json` - 本地保存区块链账本。
-- `data/app.db` - 链下数据库文件。
+- `app.py` - Flask 应用入口，包含前端页面路由与业务流程。
+- `blockchain.py` - 本地区块链仿真核心，包含区块结构、哈希计算、PoW 链式存储与数据持久化。
+- `contracts.py` - 业务状态机规则，定义捐赠物品状态流转、校验与脱敏逻辑。
+- `database.py` - 链下 SQLite 存储，保存捐赠者信息、签收信息与用户账户。
+- `config.py` - 全局配置与 Fabric 环境参数。
+- `data/chain_data.json` - 本地链上账本数据。
+- `data/app.db` - 链下 SQLite 数据库文件。
 - `templates/` - 前端页面模板。
-- `static/` - 静态资源文件，包括样式与上传照片目录。
+- `static/` - 静态资源及上传照片目录。
+- `fabric/Donation.go` - 自定义 Hyperledger Fabric 链码源代码。
 
-## 运行步骤
+## 快速开始
 
-1. 安装依赖：
+### 1. Python 环境准备
 
 ```bash
+cd /home/sitong/qkl
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. 启动服务：
+### 2. 启动 Flask 应用
 
 ```bash
+cd /home/sitong/qkl
 python app.py
 ```
 
-3. 在浏览器访问：
+在浏览器打开：
 
 ```
 http://127.0.0.1:5000
 ```
 
-## 完整运行与测试步骤
+### 3. 访问页面
 
-### 环境准备
+- 首页：`/`
+- 捐赠登记：`/donate`
+- 机构管理：`/admin`
+- 签收确认：`/receive`
+- 溯源查询：`/track`
+
+## Fabric 环境搭建与链码部署
+
+本项目使用 `~/HyperledgerFabric/fabric-samples/test-network` 作为 Fabric 运行时，链码目录位于 `~/qkl/fabric`。
+
+### 1. 准备 Fabric 网络目录
 
 ```bash
-# 创建虚拟环境（推荐）
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# 或 venv\Scripts\activate  # Windows
-
-# 安装依赖
-pip install -r requirements.txt
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
 ```
 
-### 启动应用
+### 2. 启动测试网络
 
 ```bash
-# 方式1：开发模式（支持热重载）
+./network.sh up createChannel -c mychannel -ca
+```
+
+如果网络已启动，可跳过此步。
+
+### 3. 打包并部署自定义链码
+
+当前环境中，链码名称为 `donation`。使用如下命令部署 `qkl/fabric/Donation.go`：
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+./network.sh deployCC -ccn donation -ccv 3.0 -c mychannel -ccp /home/sitong/qkl/fabric -ccl go
+```
+
+> 注：当前已部署版本为 `3.0`，如果你希望使用其它版本，请将 `-ccv` 改为对应版本；确保 `peer lifecycle chaincode querycommitted` 返回正确提交信息。
+
+### 4. 验证链码提交
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+setGlobals 1
+~/HyperledgerFabric/fabric-samples/bin/peer lifecycle chaincode querycommitted --channelID mychannel --name donation
+```
+
+你应当看到类似：
+
+```
+Committed chaincode definition for chaincode 'donation' on channel 'mychannel':
+Version: 3.0, Sequence: 2, Endorsement Plugin: escc, Validation Plugin: vscc, Approvals: [Org1MSP: true, Org2MSP: true]
+```
+
+## Fabric 链码调用与查询命令
+
+### 1. 查询链码元数据
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+setGlobals 1
+~/HyperledgerFabric/fabric-samples/bin/peer chaincode query -C mychannel -n donation -c '{"Args":["org.hyperledger.fabric:GetMetadata"]}'
+```
+
+### 2. 查询所有捐赠记录
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+setGlobals 1
+~/HyperledgerFabric/fabric-samples/bin/peer chaincode query -C mychannel -n donation -c '{"function":"GetAllDonations","Args":[]}'
+```
+
+### 3. 通过链码写入一条测试捐赠记录
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+setGlobals 1
+~/HyperledgerFabric/fabric-samples/bin/peer chaincode invoke \
+  -o localhost:7050 \
+  --ordererTLSHostnameOverride orderer.example.com \
+  --tls \
+  --cafile /home/sitong/HyperledgerFabric/fabric-samples/test-network/organizations/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem \
+  --peerAddresses localhost:7051 \
+  --tlsRootCertFiles /home/sitong/HyperledgerFabric/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem \
+  -C mychannel -n donation \
+  -c '{"function":"CreateDonation","Args":["TEST01","衣物","完好","张三","abc123","测试捐赠"]}'
+```
+
+> 如果部署时启用了 TLS，请务必传入 `--tls`、`--cafile`、`--peerAddresses` 以及 `--tlsRootCertFiles`。
+
+### 4. 查询 Fabric 账本中的指定捐赠记录
+
+如果你的链码实现支持以 `GetDonation` 或类似函数查询单条记录，可以使用：
+
+```bash
+~/HyperledgerFabric/fabric-samples/bin/peer chaincode query -C mychannel -n donation -c '{"Args":["GetDonation","TEST01"]}'
+```
+
+如果链码只支持 `GetAllDonations`，则直接查询所有记录并在结果中查找即可。
+
+## qkl 应用中的 Fabric 集成
+
+### 1. 打开 `config.py`
+
+确认以下配置项正确：
+
+- `FABRIC_ENABLED = True`
+- `FABRIC_PEER_BIN_PATH` 指向 `~/HyperledgerFabric/fabric-samples/bin/peer`
+- `FABRIC_CHANNEL` 为 `mychannel`
+- `FABRIC_CHAINCODE_NAME` 为 `donation`
+- `FABRIC_LOCALMSPID` 为 `Org1MSP`
+- `FABRIC_MSPCONFIGPATH` 为 `/home/sitong/HyperledgerFabric/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp`
+- `FABRIC_TLS_ROOTCERT_FILE` 为 `/home/sitong/HyperledgerFabric/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem`
+
+### 2. 启动前设置环境变量
+
+```bash
+cd /home/sitong/qkl
+export FABRIC_PEER_BIN_PATH=/home/sitong/HyperledgerFabric/fabric-samples/bin/peer
+export FABRIC_CHANNEL=mychannel
+export FABRIC_CHAINCODE_NAME=donation
+export FABRIC_LOCALMSPID=Org1MSP
+export FABRIC_MSPCONFIGPATH=/home/sitong/HyperledgerFabric/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+export FABRIC_TLS_ROOTCERT_FILE=/home/sitong/HyperledgerFabric/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
+export FABRIC_TLS_ENABLED=true
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+```
+
+然后启动应用：
+
+```bash
 python app.py
-
-# 方式2：使用 Flask 命令行
-export FLASK_APP=app.py
-flask run
 ```
 
-启动成功后，终端显示：
-```
-WARNING: This is a development server. Do not use it in production deployments.
-Running on http://127.0.0.1:5000
-```
+### 3. 验证应用是否连接 Fabric
 
-### 完整业务流程测试
+- 在 `app.py` 中访问链码查询接口或 `ledger` 页面
+- 检查终端日志，确认 `peer` 命令调用成功
+- 如果出现 `Function ... not found in contract SmartContract`，说明当前链码包与调用函数不匹配，需重新部署 `Donation.go` 并确认 `donation` 合约名称
 
-系统包含用户注册与登录模块：
-- `/register` - 新用户注册，支持 `donor` 或 `recipient` 角色
-- `/login` - 登录
-- `/logout` - 退出登录
-- `/user-portal` - 用户门户，根据登录角色显示不同入口
+## 业务测试流程
 
-系统默认内置账号：
-- 管理员：`admin` / `admin123`
-- 捐赠者：`donor` / `donor123`
-- 受赠者：`recipient` / `recipient123`
+### 1. 捐赠登记流程
 
-系统提供快捷入口：
-- `/donor` 重定向到 `/donate`
-- `/recipient` 重定向到 `/receive`
+1. 登录或注册捐赠者用户
+2. 在 `/donate` 提交捐赠信息与照片
+3. 记录页面返回的溯源码
+4. 观察 `data/chain_data.json` 中新增块与交易日志
 
-#### 1. 捐赠登记 (`/donate`)
-- 登录后访问 http://127.0.0.1:5000/donate
-- 填写捐赠者姓名（可选，支持匿名）
-- 输入联系电话
-- 选择物品类别（例如衣物、图书、生活用品、综合捐赠）
-- 选择物品状况
-- 上传物品照片（支持 PNG/JPG/GIF，单张≤5MB）
-- 点击"提交捐赠"
-- **预期结果**：页面显示"捐赠提交成功"与唯一的**溯源码**（10位大写字母数字组合）
+### 2. 机构验收 & 状态更新
 
-#### 2. 首页查看 (`/`)
-- 访问 http://127.0.0.1:5000/
-- 可查看：
-  - 当前区块高度
-  - 已登记物品总数
-  - 各状态物品数量统计
-  - 链完整性校验状态
-  - 最新链上活动时间轴
+1. 使用管理员账号登录 `/admin`
+2. 搜索溯源码或按状态筛选
+3. 点击“更新为下一状态”按钮，完成状态流转
+4. 检查本地链上账本 `data/chain_data.json` 是否新增状态变更记录
 
-#### 3. 机构管理 (`/admin`)
-- 登录管理员账号后访问 http://127.0.0.1:5000/admin
-- 按溯源码、物品类型或捐赠者搜索
-- 按状态筛选（待接收、处理中、已分拣、运送中、已签收）
-- 点击对应物品的"更新为 [下一状态]"按钮逐步推进
-- **预期流转**：待接收 → 处理中 → 已分拣 → 运送中 → 已签收
+### 3. 受赠者签收
 
-#### 4. 签收确认 (`/receive`)
-- 登录受赠者账号后访问 http://127.0.0.1:5000/receive
-- 输入溯源码查询物品
-- 查看物品照片、状态、捐赠者信息
-- **仅当物品状态为"运送中"时**，表单才可用于签收
-- 填写受赠方姓名、编号、地址
-- 点击"确认签收"完成闭环
-- **预期结果**：物品状态变为"已签收"，流程完成
+1. 登录受赠者账号访问 `/receive`
+2. 输入溯源码查询记录
+3. 仅当状态为“运送中”时，填写签收信息并提交
+4. 验证状态变更为“已签收”并生成完整溯源纪录
 
-#### 5. 实时溯源 (`/track`)
-- 访问 http://127.0.0.1:5000/track
-- 输入溯源码查询
-- 查看：
-  - 物品照片
-  - 完整流转时间轴（从捐赠至签收）
-  - 每个节点的时间戳、状态、备注
-  - 链完整性校验标志
-  - 签收方信息（如已签收）
+### 4. 溯源查询
 
-### 数据持久化
+1. 访问 `/track`
+2. 输入溯源码
+3. 查看全流程时间轴、当前状态、照片和签收信息
 
-系统生成的数据存储位置：
+## 本地账本与 Fabric 账本对比
 
-```
-blockchain/
-├── data/
-│   ├── chain_data.json      # 区块链账本（不可篡改）
-│   └── app.db               # SQLite 数据库（捐赠者、受赠方信息）
-├── static/uploads/          # 上传的物品照片
-```
+- `data/chain_data.json`：应用本地链上账本，保存捐赠与状态变更记录。
+- Fabric `donation` 链码账本：如果启用 Fabric，可在 `peer chaincode query` 中查询 Fabric 账本内容。
 
-清除测试数据：
+### Fabric 账本查询命令示例
 
 ```bash
-# 完全重置系统（谨慎操作）
-rm -rf data/chain_data.json data/app.db static/uploads/*
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+setGlobals 1
+~/HyperledgerFabric/fabric-samples/bin/peer chaincode query -C mychannel -n donation -c '{"function":"GetAllDonations","Args":[]}'
 ```
 
-## 网络访问与部署
-
-### 本地网络访问
-
-`app.py` 默认已配置为监听 `0.0.0.0:5000`，如果使用 `python app.py` 启动，局域网内其他设备即可访问。
-
-如果使用 Flask CLI 启动，请指定主机地址：
-
-```bash
-export FLASK_APP=app.py
-flask run --host=0.0.0.0 --port=5000
-```
-
-启动后，其他设备可通过以下方式访问：
-
-```
-http://192.168.140.133:5000
-```
-
-获取IP地址：
-
-```bash
-# Linux/Mac
-ip addr | grep 'inet ' | grep -v 127.0.0.1
-
-# Windows
-ipconfig
-```
-
-### 生产环境建议
-
-```bash
-# 使用 Gunicorn（推荐）
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-
-# 使用 uWSGI
-pip install uwsgi
-uwsgi --http :5000 --wsgi-file app.py --callable app
-```
-
-
-## 功能说明
-
-- `donate.html` - 捐赠登记页面，上传照片并生成唯一溯源码。
-- `admin.html` - 公益机构验收与状态更新页面，支持溯源码搜索和状态筛选。
-- `receive.html` - 受赠方签收确认页面，完成多方闭环并展示当前签收条件。
-- `track.html` - 溯源查询页面，展示物品全流程时间轴、捐赠照片与签收详情。
-
-## 核心特色
-
-- **链上链下分离**：大文件与隐私信息链下保存，链上只存哈希与状态。
-- **状态机流转**：物品状态只能由 `待接收 → 处理中 → 已分拣 → 运送中 → 已签收` 单向流转，防止逆向篡改。
-- **数据脱敏**：捐赠方/受赠方信息在链上展示脱敏结果，真实信息仅保存在链下数据库，保护隐私。
-- **本地持久化**：区块链账本保存为 `data/chain_data.json`，链下数据保存为 `data/app.db`。
-- **哈希校验**：每个物品照片计算 SHA-256 哈希，链上存储哈希值，确保照片完整性。
-- **工作量证明（PoW）**：链上每个区块需完成 3 位难度的 PoW，增加防篡改难度。
-- **可视化时间轴**：溯源查询支持时间轴展示，直观呈现物品全流程。
-- **搜索与筛选**：机构管理端支持按溯源码、物品类型、捐赠者搜索，按状态筛选。
-
-## 技术栈
-
-- **后端**：Python Flask
-- **数据库**：SQLite（链下数据）、JSON（区块链账本）
-- **前端**：HTML5 + CSS3 + JavaScript
-- **加密**：SHA-256（哈希）
-- **状态管理**：有限状态机（FSM）
-
-## 依赖
-
-- Flask
-- Werkzeug（文件上传安全处理）
-
-查看完整依赖：
-
-```bash
-cat requirements.txt
-```
+如果链码已正确部署，输出中会包含当前所有捐赠记录。
 
 ## 常见问题
 
-### Q1: 系统能处理多少捐赠记录？
-A: 本地系统基于 JSON 账本存储，理论上无限制。但建议单个账本≤1000 个物品时归档新账本以保证性能。
+### 1. 为什么 Fabric 查询报 `Function ... not found in contract SmartContract`？
 
-### Q2: 能否修改已上链的记录？
-A: **不能**。区块链的不可篡改特性保证了每条记录的真实性。若需更正，只能添加新的操作记录。
+这通常表示当前安装的链码不是你期望的 `Donation.go` 合约，或者链码包仍然是旧的 sample 合约。
 
-### Q3: 照片存在哪里？
-A: 照片存储在 `static/uploads/` 目录，文件名为 `[溯源码]_[原始文件名]`。链上只存储照片的 SHA-256 哈希值。
+解决方法：
 
-### Q4: 如何备份数据？
-A: 备份 `data/` 文件夹与 `static/uploads/` 文件夹即可完整备份所有数据。
+1. 重新打包并部署 `~/qkl/fabric/Donation.go`
+2. 确保 `peer lifecycle chaincode querycommitted` 返回 `donation` 的版本与序列号正确
+3. 使用 `org.hyperledger.fabric:GetMetadata` 验证当前链码合约名称
 
-### Q5: 支持多用户并发吗？
-A: 开发模式不支持。生产环境需使用 Gunicorn + Nginx 等部署方案实现并发支持。
+### 2. 如何确认 Fabric 环境变量正确？
+
+- `FABRIC_CFG_PATH` 应指向 `~/HyperledgerFabric/fabric-samples/config`
+- `FABRIC_MSPCONFIGPATH` 应指向 Admin MSP
+- `FABRIC_TLS_ROOTCERT_FILE` 应指向 org1 TLS CA 证书
+- 运行 `. scripts/envVar.sh` 与 `setGlobals 1` 后，`peer` 命令应正常执行
+
+### 3. 如何重置 Fabric 网络？
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+./network.sh down
+rm -rf organizations/peerOrganizations organizations/ordererOrganizations channel-artifacts
+./network.sh up createChannel -c mychannel -ca
+```
 
 ## 贡献与反馈
 
-本项目为公益捐赠溯源系统原型。欢迎提出改进意见或代码贡献！
-
+如果你对系统功能、Fabric 集成或链码实现有改进建议，欢迎提交 issue 或 PR。
 ---
 
 **最后更新**：2026 年 5 月 8 日
+
+## 关闭运行中的代码与环境
+
+在开发或演示结束后，可以使用以下命令安全地停止应用程序、Fabric 测试网络及清理环境变量与临时文件。
+
+- 停止 Flask 应用（如果在前台运行，直接按 Ctrl+C；若在后台运行可用 pid 停止）:
+
+```bash
+# 在前台运行时（按 Ctrl+C）
+# 若通过 nohup 或 & 后台启动，可用下面方式查找并终止
+ps aux | grep 'python.*app.py' | grep -v grep
+kill <PID>
+# 或强制结束
+kill -9 <PID>
+```
+
+- 退出 Python 虚拟环境:
+
+```bash
+deactivate
+```
+
+- 清理并停止 Fabric test-network:
+
+```bash
+cd /home/sitong/HyperledgerFabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=/home/sitong/HyperledgerFabric/fabric-samples/config
+. scripts/envVar.sh
+# 停止并清理网络（会删除渠道和组织证书等本地产物）
+./network.sh down
+# 可选：完全移除生成的组织与通道产物（谨慎）
+rm -rf organizations/peerOrganizations organizations/ordererOrganizations channel-artifacts crypto-config
+```
+
+- 若使用 peer 进程或 orderer 进程残留（很少见），终止它们：
+
+```bash
+ps aux | egrep 'orderer|peer' | grep -v grep
+kill <ORDERER_OR_PEER_PID>
+```
+
+- 取消导出的 Fabric 相关环境变量（仅当前 shell 会话）：
+
+```bash
+unset FABRIC_CFG_PATH
+unset FABRIC_PEER_BIN_PATH
+unset FABRIC_MSPCONFIGPATH
+unset FABRIC_TLS_ROOTCERT_FILE
+unset FABRIC_CHANNEL
+unset FABRIC_CHAINCODE_NAME
+unset FABRIC_LOCALMSPID
+unset FABRIC_TLS_ENABLED
+```
+
+- 额外：如果链码已安装并需要重新部署，可在 test-network 中使用 `network.sh` 的相关命令重新安装/升级链码（见上面的部署步骤）。

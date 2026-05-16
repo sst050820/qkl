@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+  <div class="page-header">
+    <div>
+      <h2>链上账本查询</h2>
+      <p>查阅当前链上所有捐赠事件记录，来源：
+        <span class="badge {{ 'badge-success' if source == 'fabric' else 'badge-info' }}">
+          {{ 'Fabric 链码' if source == 'fabric' else '本地模拟链' }}
+        </span>
+      </p>
+    </div>
+    <div class="page-actions">
+      <div style="text-align:right; font-size:.85rem; color:var(--text-muted); padding:8px 0;">
+        <p>共 <strong style="color:var(--text-primary);">{{ events | length }}</strong> 条记录</p>
+      </div>
+    </div>
+  </div>
+
+  {% if events %}
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>溯源码</th>
+          <th>状态</th>
+          <th>类别</th>
+          <th>捐赠者</th>
+          <th>备注</th>
+          <th>上链时间</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for event in events %}
+      {% if event.data %}{% set rec = event.data %}{% else %}{% set rec = event %}{% endif %}
+      <tr>
+        <td>
+          <a href="{{ url_for('track') }}?tracking_id={{ rec.tracking_id or rec['tracking_id'] }}"
+             class="tracking-id-display" style="color:var(--primary);">
+            {{ rec.tracking_id or rec['tracking_id'] }}
+          </a>
+        </td>
+        <td><span class="badge badge-info">{{ rec.status or rec['status'] }}</span></td>
+        <td>{{ rec.item_type or rec['item_type'] }}</td>
+        <td>{{ rec.donor_name or rec['donor_name'] }}</td>
+        <td style="color:var(--text-muted); font-size:.82rem; max-width:200px;">
+          {{ rec.note or rec['note'] or '—' }}
+        </td>
+        <td style="font-size:.8rem; color:var(--text-muted); white-space:nowrap;">
+          {{ event.timestamp or event['timestamp'] or '—' }}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="helper-text" style="padding:24px 0; text-align:center;">当前链上没有可显示的记录。</p>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,6 +1,65 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="hero-card">
+
+<div class="card highlight-card">
+  <h3>所有登记物品</h3>
+  {% if items %}
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>溯源码</th>
+          <th>状态</th>
+          <th>类别</th>
+          <th>捐赠者</th>
+          <th>新旧程度</th>
+          <th>更新时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in items %}
+      <tr>
+        <td><span class="tracking-id-display">{{ item.tracking_id }}</span></td>
+        <td><span class="badge badge-info">{{ item.status }}</span></td>
+        <td>{{ item.item_type }}</td>
+        <td>{{ item.donor_name }}</td>
+        <td>{{ item.condition }}</td>
+        <td style="font-size:.8rem; color:var(--text-muted);">{{ item.updated_at }}</td>
+        <td>
+          <a href="#" class="action-link toggle-history" data-target="history-{{ item.tracking_id }}">查看历史</a>
+        </td>
+      </tr>
+      <tr class="hidden-row" id="history-{{ item.tracking_id }}">
+        <td colspan="7">
+          <div class="history-panel">
+            <div class="history-header">
+              <strong>溯源码 {{ item.tracking_id }} 简要历史</strong>
+            </div>
+            <div class="timeline">
+              {% for record in item.history %}
+              <div class="timeline-item">
+                <div class="timeline-icon"></div>
+                <div>
+                  <p class="timeline-time">{{ record.timestamp }}</p>
+                  <p><strong>{{ record.event.status }}</strong></p>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="helper-text" style="padding:20px 0; text-align:center;">当前尚无捐赠记录，请先完成捐赠登记。</p>
+  {% endif %}
+</div>
+
+<div class="hero-card subdued-hero-card">
   <div class="hero-card-info">
     <h2>平台概览</h2>
     <p>实时呈现捐赠物资全流程状态统计，支持链上完整性校验与可追溯查询。</p>
@@ -16,68 +75,25 @@
     </div>
     <div class="stat-card">
       <span class="stat-title">链完整性</span>
-      <strong class="badge {{ 'badge-success' if valid_chain else 'badge-danger' }}">{{ '通过' if valid_chain else '异常' }}</strong>
+      <strong class="badge {{ 'badge-success' if valid_chain else 'badge-danger' }}" style="font-size:1rem; padding:4px 12px;">
+        {{ '✓ 通过' if valid_chain else '✕ 异常' }}
+      </strong>
     </div>
   </div>
-</div>
-<div class="card">
-  <h3>所有登记物品状态</h3>
-  {% if items %}
-  <div class="table-responsive">
-    <table>
-      <thead>
-        <tr><th>溯源码</th><th>状态</th><th>类别</th><th>捐赠者</th><th>新旧程度</th><th>更新时间</th><th>操作</th></tr>
-      </thead>
-      <tbody>
-      {% for item in items %}
-      <tr>
-        <td>{{ item.tracking_id }}</td>
-        <td><span class="badge badge-info">{{ item.status }}</span></td>
-        <td>{{ item.item_type }}</td>
-        <td>{{ item.donor_name }}</td>
-        <td>{{ item.condition }}</td>
-        <td>{{ item.updated_at }}</td>
-        <td><a href="#" class="action-link toggle-history" data-target="history-{{ item.tracking_id }}">查看历史</a></td>
-      </tr>
-      <tr class="history-row hidden-row" id="history-{{ item.tracking_id }}">
-        <td colspan="7">
-          <div class="history-panel">
-            <div class="history-header">
-              <strong>溯源码 {{ item.tracking_id }} 历史记录</strong>
-              {% if item.photo_url %}
-              <img class="preview-image" src="{{ item.photo_url }}" alt="物品照片" />
-              {% endif %}
-            </div>
-            <div class="timeline">
-              {% for record in item.history %}
-              <div class="timeline-item">
-                <div class="timeline-icon"></div>
-                <div>
-                  <p class="timeline-time">{{ record.timestamp }}</p>
-                  <p><strong>{{ record.event.status }}</strong> / {{ record.event.item_type }}</p>
-                  <p>{{ record.event.note or '无备注' }}</p>
-                  {% if record.event.receiver %}
-                  <p><strong>受赠方：</strong>{{ record.event.receiver }}</p>
-                  {% endif %}
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-            {% if item.recipient %}
-            <div class="recipient-summary">
-              <p><strong>最后确认受赠方：</strong>{{ item.recipient.recipient_name }} / {{ item.recipient.recipient_code }}</p>
-              <p><strong>签收地址：</strong>{{ item.recipient.address }}</p>
-            </div>
-            {% endif %}
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+  <div class="action-grid">
+    <a class="action-card" href="{{ url_for('donate') }}">
+      <strong>我要捐赠</strong>
+      <p>登记物品并生成溯源码</p>
+    </a>
+    <a class="action-card" href="{{ url_for('track') }}">
+      <strong>溯源码查询</strong>
+      <p>查看物品完整流转记录</p>
+    </a>
+    <a class="action-card" href="{{ url_for('ledger') }}">
+      <strong>链上账本</strong>
+      <p>查阅所有上链交易记录</p>
+    </a>
   </div>
-  {% else %}
-  <p>当前尚无捐赠记录，请先完成捐赠登记。</p>
-  {% endif %}
 </div>
+
 {% endblock %}

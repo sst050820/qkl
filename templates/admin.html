@@ -1,11 +1,34 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="card">
-  <h2>公益机构管理</h2>
-  <p>在此页面对已登记物品进行验收、分拣、出库等状态更新。</p>
+  <div class="page-header">
+    <div>
+      <h2>机构管理</h2>
+      <p>管理员可在此对待接收物品进行分配，并推进仓库与快递站的后续处理状态。</p>
+    </div>
+    <div class="page-actions">
+      <a class="action-card small-card secondary" href="{{ url_for('ledger') }}">
+        <strong>链上账本</strong>
+        <p>查看全部链上记录</p>
+      </a>
+      <a class="action-card small-card secondary" href="{{ url_for('track') }}">
+        <strong>溯源查询</strong>
+        <p>按溯源码查流转状态</p>
+      </a>
+    </div>
+  </div>
+
+  {# ── 添加机构 ── #}
+  <div class="helper-text" style="margin-bottom:18px;">
+    管理员可将待接收物品分配给“仓库”或“快递站”，并根据状态推进后续流程。
+  </div>
+  <hr class="section-divider" />
+
+  {# ── 搜索/筛选 ── #}
   <form method="get" class="search-row">
-    <input type="text" name="query" placeholder="搜索溯源码 / 类型 / 捐赠者" value="{{ query or '' }}" />
-    <select name="status">
+    <input type="text" name="query" placeholder="搜索溯源码 / 类型 / 捐赠者…" value="{{ query or '' }}" />
+    <select name="status" style="max-width:160px;">
       <option value="">全部状态</option>
       {% for status in states %}
       <option value="{{ status }}" {% if filter_status == status %}selected{% endif %}>{{ status }}</option>
@@ -13,29 +36,62 @@
     </select>
     <input type="submit" value="筛选" />
   </form>
+
+  {# ── 物品列表 ── #}
+  {% if items %}
   <div class="table-responsive">
     <table>
       <thead>
-        <tr><th>溯源码</th><th>类别</th><th>状态</th><th>捐赠者</th><th>更新时间</th><th>下一步</th><th>操作</th></tr>
+        <tr>
+          <th>溯源码</th>
+          <th>类别</th>
+          <th>状态</th>
+          <th>捐赠者</th>
+          <th>更新时间</th>
+          <th>推进状态</th>
+          <th>分配机构</th>
+        </tr>
       </thead>
       <tbody>
       {% for item in items %}
       <tr>
-        <td><a href="{{ url_for('track') }}?tracking_id={{ item.tracking_id }}">{{ item.tracking_id }}</a></td>
+        <td>
+          <a href="{{ url_for('track') }}?tracking_id={{ item.tracking_id }}"
+             class="tracking-id-display" style="color:var(--primary);">{{ item.tracking_id }}</a>
+        </td>
         <td>{{ item.item_type }}</td>
         <td><span class="badge badge-info">{{ item.status }}</span></td>
         <td>{{ item.donor_name }}</td>
-        <td>{{ item.updated_at }}</td>
-        <td>{{ item.next_state or '无' }}</td>
+        <td style="font-size:.8rem; color:var(--text-muted);">{{ item.updated_at }}</td>
+
+        {# 推进状态 #}
         <td>
           {% if item.next_state %}
-          <form method="post" style="margin:0; display:inline-block;">
+          <form method="post" class="inline-form">
             <input type="hidden" name="tracking_id" value="{{ item.tracking_id }}" />
             <input type="hidden" name="current_state" value="{{ item.status }}" />
-            <button type="submit">更新为 {{ item.next_state }}</button>
+            <button type="submit" class="btn btn-sm">→ {{ item.next_state }}</button>
           </form>
           {% else %}
           <span class="badge badge-success">已完成</span>
+          {% endif %}
+        </td>
+
+        {# 分配机构 #}
+        <td>
+          {% if item.status != '已签收' %}
+          <form method="post" class="inline-form">
+            <input type="hidden" name="assign_tracking" value="{{ item.tracking_id }}" />
+            <select name="assign_org" style="min-width:110px; font-size:.8rem;">
+              <option value="">— 选择机构 —</option>
+              {% for inst in institutions %}
+              <option value="{{ inst.name }}">{{ inst.name }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline">分配</button>
+          </form>
+          {% else %}
+          <span class="badge badge-success">已签收</span>
           {% endif %}
         </td>
       </tr>
@@ -43,8 +99,54 @@
       </tbody>
     </table>
   </div>
-  {% if not items %}
-  <p class="helper-text">暂无匹配记录，可调整筛选条件或检查溯源码是否正确。</p>
+  {% else %}
+  <p class="helper-text" style="padding:20px 0; text-align:center;">暂无匹配记录，可调整筛选条件或检查溯源码是否正确。</p>
   {% endif %}
 </div>
+
+{# ── 用户账号列表 ── #}
+  {% if users %}
+  <div class="card">
+    <h3>用户账号列表</h3>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>用户名</th>
+            <th>角色</th>
+            <th>机构名称</th>
+            <th>注册时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td><strong>{{ u.username }}</strong></td>
+            <td>
+              {% if u.role == 'donor' %}捐赠方
+              {% elif u.role == 'recipient' %}受赠方
+              {% elif u.role == 'institution' %}机构员工
+              {% elif u.role == 'warehouse' %}中转仓库
+              {% elif u.role == 'courier' %}快递站
+              {% elif u.role == 'admin' %}管理员
+              {% else %}{{ u.role }}
+              {% endif %}
+            </td>
+            <td>{{ u.org_name or '' }}</td>
+            <td style="font-size:.8rem; color:var(--text-muted);">{{ u.created_at }}</td>
+            <td>
+              <form method="post" class="inline-form" onsubmit="return confirm('确认删除用户 {{ u.username }} 吗？此操作不可恢复。');">
+                <input type="hidden" name="delete_username" value="{{ u.username }}" />
+                <button type="submit" class="btn btn-sm btn-danger">删除</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
 {% endblock %}

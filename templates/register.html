@@ -1,24 +1,41 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card">
+
+<div class="card form-card">
   <h2>用户注册</h2>
-  <p>注册后会自动登录并进入个人主页。</p>
-  <form method="post">
+  <p>注册成功后自动登录并进入个人主页，请选择账号类型完成注册。</p>
+
+  <form method="post" class="form-grid">
     <label>用户名</label>
-    <input type="text" name="username" placeholder="请设置一个用户名" required />
+    <input type="text" name="username" placeholder="请设置一个用户名" required autocomplete="username" />
+
     <label>密码</label>
-    <input type="password" name="password" placeholder="设置密码" required />
+    <input type="password" name="password" placeholder="设置密码" required autocomplete="new-password" />
+
     <label>确认密码</label>
-    <input type="password" name="confirm_password" placeholder="再次输入密码" required />
+    <input type="password" name="confirm_password" placeholder="再次输入密码" required autocomplete="new-password" />
+
     <label>身份角色</label>
-    <select name="role">
+    <select name="role" id="role-select">
       <option value="donor">捐赠方</option>
       <option value="recipient">受赠方</option>
+      <option value="institution">机构员工</option>
+      <option value="warehouse">中转仓库</option>
+      <option value="courier">快递站</option>
     </select>
-    <input type="submit" value="立即注册" />
+
+    <p class="helper-text">选择机构员工、仓库或快递站角色时，系统将自动分配对应处理节点。</p>
+
+    <div class="full-width">
+      <input type="submit" value="立即注册" />
+    </div>
   </form>
-  <div class="helper-text" style="margin-top: 16px;">
+
+  <hr class="section-divider" />
+
+  <div class="helper-text">
     <p>已有账号？<a href="{{ url_for('login') }}">返回登录</a></p>
   </div>
 </div>
+
 {% endblock %}

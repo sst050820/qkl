@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+  <div class="page-header">
+    <div>
+      <h2>快递员门户</h2>
+      <p>快递员：<strong>{{ username }}</strong> — 处理分配给您的运输任务。</p>
+    </div>
+  </div>
+
+  {% if items %}
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>溯源码</th>
+          <th>类别</th>
+          <th>当前状态</th>
+          <th>捐赠者</th>
+          <th>更新时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in items %}
+      <tr>
+        <td>
+          <a href="{{ url_for('track') }}?tracking_id={{ item.tracking_id }}"
+             class="tracking-id-display" style="color:var(--primary);">{{ item.tracking_id }}</a>
+        </td>
+        <td>{{ item.item_type }}</td>
+        <td><span class="badge badge-info">{{ item.status }}</span></td>
+        <td>{{ item.donor_name }}</td>
+        <td style="font-size:.8rem; color:var(--text-muted);">{{ item.created_at }}</td>
+        <td>
+          {% if item.status == '运送中' %}
+          <form method="post" class="inline-form" style="display:inline-block; margin-right:6px;">
+            <input type="hidden" name="tracking_id" value="{{ item.tracking_id }}" />
+            <input type="hidden" name="action" value="deliver_to_warehouse" />
+            <button type="submit" class="btn btn-sm">交付仓库</button>
+          </form>
+          {% elif item.status == '已分拣' %}
+          <form method="post" class="inline-form" style="display:inline-block;">
+            <input type="hidden" name="tracking_id" value="{{ item.tracking_id }}" />
+            <input type="hidden" name="action" value="deliver_to_recipient" />
+            <select name="recipient_username" class="form-select" style="margin-right:6px; min-width:160px;">
+              <option value="">请选择受赠者（可选）</option>
+              {% for recipient in recipients %}
+              <option value="{{ recipient.username }}">{{ recipient.username }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm">运送至受赠者</button>
+          </form>
+          {% else %}
+          <span class="badge badge-secondary">无可用操作</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="helper-text" style="padding:24px 0; text-align:center;">暂无分配给您的运输任务。</p>
+  {% endif %}
+</div>
+
+{% endblock %}

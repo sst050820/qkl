@@ -1,47 +1,66 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="card">
   <h2>实时溯源查询</h2>
-  <p>输入溯源码，查看当前物品链上流转记录与捐赠闭环数据。</p>
-  <form method="get" class="search-row">
-    <input type="text" name="tracking_id" value="{{ tracking_id }}" placeholder="请输入溯源码" />
+  <p>输入溯源码，查看捐赠物品链上完整流转记录，支持链完整性实时校验。</p>
+
+  <form method="get" class="search-row" style="margin-top:4px;">
+    <input type="text" name="tracking_id" value="{{ tracking_id }}" placeholder="请输入溯源码…" />
     <input type="submit" value="查询" />
   </form>
+
   {% if tracking_id %}
     {% if history %}
-    <div class="item-summary" style="margin-top:18px;">
+    <div class="item-summary" style="margin-top:8px;">
       {% if photo_url %}
       <img class="preview-image" src="{{ photo_url }}" alt="物品照片" />
       {% endif %}
       <div>
-        <p><strong>当前状态：</strong>{{ history[-1].event.status }}</p>
+        <p>
+          <strong>当前状态：</strong>
+          <span class="badge badge-info">{{ history[-1].event.status }}</span>
+        </p>
         <p><strong>物品类别：</strong>{{ history[-1].event.item_type }}</p>
         <p><strong>捐赠者：</strong>{{ history[-1].event.donor_name }}</p>
         {% if recipient %}
-        <p><strong>受赠方：</strong>{{ recipient.recipient_name }} / {{ recipient.recipient_code }}</p>
+        <p><strong>受赠方：</strong>{{ recipient.recipient_name }} · {{ recipient.recipient_code }}</p>
         <p><strong>签收地址：</strong>{{ recipient.address }}</p>
         {% endif %}
-        <p>链完整性校验：<span class="badge {{ 'badge-success' if valid else 'badge-danger' }}">{{ '通过' if valid else '异常' }}</span></p>
+        <p style="margin-top:8px;">
+          链完整性：
+          <span class="badge {{ 'badge-success' if valid else 'badge-danger' }}">
+            {{ '✓ 通过' if valid else '✕ 异常' }}
+          </span>
+        </p>
       </div>
     </div>
+
+    <h3 style="margin-bottom:8px; margin-top:4px; font-size:.9rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;">
+      流转时间线
+    </h3>
     <div class="timeline">
       {% for item in history %}
       <div class="timeline-item">
         <div class="timeline-icon"></div>
         <div>
           <p class="timeline-time">{{ item.timestamp }}</p>
-          <p><strong>{{ item.event.status }}</strong> / {{ item.event.item_type }}</p>
-          <p>{{ item.event.note or '无备注' }}</p>
+          <p><strong>{{ item.event.status }}</strong> · {{ item.event.item_type }}</p>
+          <p style="color:var(--text-muted); font-size:.82rem;">{{ item.event.note or '无备注' }}</p>
           {% if item.event.receiver %}
-          <p><strong>受赠方：</strong>{{ item.event.receiver }}</p>
+          <p style="font-size:.82rem;"><strong>受赠方：</strong>{{ item.event.receiver }}</p>
           {% endif %}
         </div>
       </div>
       {% endfor %}
     </div>
+
     {% else %}
-    <p class="helper-text">未找到该溯源码的上链记录，请确认输入是否正确。</p>
+    <p class="helper-text" style="margin-top:12px;">
+      未找到溯源码 <strong>{{ tracking_id }}</strong> 的上链记录，请确认输入是否正确。
+    </p>
     {% endif %}
   {% endif %}
 </div>
+
 {% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card">
+  <div class="page-header">
+    <div>
+      <h2>机构门户</h2>
+      <p>机构：<strong>{{ org_name or current_user }}</strong> — 处理分配到本机构的物资并推进流转状态。</p>
+    </div>
+    <div class="page-actions">
+      <a class="action-card small-card secondary" href="{{ url_for('track') }}">
+        <strong>溯源查询</strong>
+        <p>查看物品流转详情</p>
+      </a>
+    </div>
+  </div>
+
+  {% if items %}
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>溯源码</th>
+          <th>类别</th>
+          <th>当前状态</th>
+          <th>捐赠者</th>
+          <th>更新时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in items %}
+      <tr>
+        <td>
+          <a href="{{ url_for('track') }}?tracking_id={{ item.tracking_id }}"
+             class="tracking-id-display" style="color:var(--primary);">{{ item.tracking_id }}</a>
+        </td>
+        <td>{{ item.item_type }}</td>
+        <td><span class="badge badge-info">{{ item.status }}</span></td>
+        <td>{{ item.donor_name }}</td>
+        <td style="font-size:.8rem; color:var(--text-muted);">{{ item.updated_at }}</td>
+        <td>
+          {% if item.status == '待接收' %}
+          <form method="post" class="inline-form">
+            <input type="hidden" name="tracking_id" value="{{ item.tracking_id }}" />
+            <input type="hidden" name="action" value="accept" />
+            <button type="submit" class="btn btn-sm">接收并标记为处理中</button>
+          </form>
+          {% elif item.status == '处理中' %}
+          <form method="post" class="inline-form">
+            <input type="hidden" name="tracking_id" value="{{ item.tracking_id }}" />
+            <input type="hidden" name="action" value="assign_courier" />
+            <select name="courier" style="min-width:140px; font-size:.8rem;">
+              <option value="">— 选择快递员 —</option>
+              {% for c in couriers %}
+              <option value="{{ c.username }}">{{ c.username }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline">发送给快递员</button>
+          </form>
+          {% else %}
+          <span class="badge badge-success">{{ item.status }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="helper-text" style="padding:24px 0; text-align:center;">
+    暂无待处理物品。分配给本机构的物资将在此显示。
+  </p>
+  {% endif %}
+</div>
+
+{% endblock %}

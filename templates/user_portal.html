@@ -1,25 +1,85 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="card">
-  <h2>普通用户入口</h2>
+  <div class="page-header">
+    <div>
+      <h2>用户入口</h2>
+      <p>根据当前登录身份，选择对应的操作入口。</p>
+    </div>
+  </div>
+
   {% if current_role == 'donor' %}
-  <p>当前已登录为捐赠方，您可前往捐赠登记页面。</p>
+  <p style="color:var(--text-secondary); margin-bottom:18px;">当前身份：<strong>捐赠方</strong></p>
   <div class="action-grid">
-    <a class="action-card" href="{{ url_for('donate') }}">
+    <a class="action-card secondary" href="{{ url_for('donate') }}">
       <strong>前往捐赠登记</strong>
-      <p>提交物品信息并生成溯源码。</p>
+      <p>提交物品信息并生成溯源码</p>
+    </a>
+    <a class="action-card secondary" href="{{ url_for('track') }}">
+      <strong>溯源码查询</strong>
+      <p>查验已提交物品的当前状态</p>
     </a>
   </div>
+
   {% elif current_role == 'recipient' %}
-  <p>当前已登录为受赠方，您可前往签收确认页面。</p>
+  <p style="color:var(--text-secondary); margin-bottom:18px;">当前身份：<strong>受赠方</strong></p>
   <div class="action-grid">
-    <a class="action-card" href="{{ url_for('receive') }}">
+    <a class="action-card secondary" href="{{ url_for('receive') }}">
       <strong>前往签收确认</strong>
-      <p>查询溯源码并完成接收签收。</p>
+      <p>查看待签收物品并完成接收签收</p>
+    </a>
+    <a class="action-card secondary" href="{{ url_for('track') }}">
+      <strong>溯源码查询</strong>
+      <p>查看物品当前流转记录</p>
     </a>
   </div>
+
+  {% elif current_role == 'institution' %}
+  <p style="color:var(--text-secondary); margin-bottom:18px;">当前身份：<strong>机构员工</strong></p>
+  <div class="action-grid">
+    <a class="action-card secondary" href="{{ url_for('institution_portal') }}">
+      <strong>进入机构门户</strong>
+      <p>接收捐赠并指派快递员</p>
+    </a>
+    <a class="action-card secondary" href="{{ url_for('track') }}">
+      <strong>溯源码查询</strong>
+      <p>查看物品当前流转记录</p>
+    </a>
+  </div>
+
+  {% elif current_role == 'warehouse' %}
+  <p style="color:var(--text-secondary); margin-bottom:18px;">当前身份：<strong>中转仓库</strong></p>
+  <div class="action-grid">
+    <a class="action-card secondary" href="{{ url_for('warehouse_portal') }}">
+      <strong>进入仓库门户</strong>
+      <p>处理到达仓库的物品并分拣</p>
+    </a>
+    <a class="action-card secondary" href="{{ url_for('track') }}">
+      <strong>溯源码查询</strong>
+      <p>查看物品当前流转记录</p>
+    </a>
+  </div>
+
+  {% elif current_role == 'courier' %}
+  <p style="color:var(--text-secondary); margin-bottom:18px;">当前身份：<strong>快递员</strong></p>
+  <div class="action-grid">
+    <a class="action-card secondary" href="{{ url_for('courier_portal') }}">
+      <strong>进入快递员门户</strong>
+      <p>查看分配任务并执行运输</p>
+    </a>
+    <a class="action-card secondary" href="{{ url_for('track') }}">
+      <strong>溯源码查询</strong>
+      <p>查看物品当前流转记录</p>
+    </a>
+  </div>
+
   {% else %}
-  <p>当前账号不属于普通用户角色，若需进入普通用户功能请使用 donor 或 recipient 账号登录。</p>
+  <div class="alert-card">
+    当前账号角色（<strong>{{ current_role }}</strong>）不属于普通用户，
+    请使用 <strong>donor</strong> 或 <strong>recipient</strong> 账号登录以访问此页面。
+  </div>
   {% endif %}
 </div>
+
 {% endblock %}

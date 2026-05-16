@@ -1,14 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card">
-  <h2>捐赠登记</h2>
-  <p><a href="{{ url_for('user_portal') }}">← 返回用户入口</a></p>
-  <p>请填写捐赠信息并上传物品照片，系统会生成唯一溯源码用于后续验收与签收。</p>
-  <form method="post" enctype="multipart/form-data">
+
+<div class="card" style="max-width:600px;">
+  <div class="page-header">
+    <div>
+      <h2>捐赠登记</h2>
+      <p>填写物品信息并上传照片，系统将生成唯一溯源码用于后续全流程追踪。</p>
+    </div>
+  </div>
+
+  <p><a href="{{ url_for('user_portal') }}" class="action-link">← 返回用户入口</a></p>
+
+  <form method="post" enctype="multipart/form-data" style="margin-top:16px;">
     <label>捐赠者姓名</label>
-    <input type="text" name="donor_name" placeholder="填写真实姓名或匿名" />
+    <input type="text" name="donor_name" placeholder="填写真实姓名或输入"匿名"" />
+
     <label>联系方式</label>
-    <input type="text" name="phone" placeholder="联系电话（仅链下保存）" />
+    <input type="text" name="phone" placeholder="联系电话（仅链下保存，不对外展示）" />
+
     <label>物品类别</label>
     <select name="item_type">
       <option>衣物</option>
@@ -16,6 +25,7 @@
       <option>生活用品</option>
       <option>综合捐赠</option>
     </select>
+
     <label>新旧程度</label>
     <select name="condition">
       <option>全新</option>
@@ -23,10 +33,17 @@
       <option>九成新</option>
       <option>正常可用</option>
     </select>
-    <label>上传物品照片</label>
+
+    <label>物品照片</label>
     <input type="file" name="photo" accept="image/*" />
-    <img id="photo-preview" class="preview-image" src="#" alt="预览图片" style="display:none;" />
-    <input type="submit" value="提交捐赠" />
+    <p class="helper-text">支持 PNG / JPG / GIF，建议上传清晰实物照片（≤ 5 MB）</p>
+    <img id="photo-preview" class="preview-image" src="#" alt="预览图片"
+         style="display:none; margin-top:10px; max-width:200px;" />
+
+    <div style="margin-top:22px;">
+      <input type="submit" value="提交捐赠" />
+    </div>
   </form>
 </div>
+
 {% endblock %}

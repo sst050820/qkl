@@ -1,22 +1,36 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card">
+
+<div class="card form-card">
   <h2>用户登录</h2>
-  <p>请选择账号登录，不同身份拥有不同的权限。</p>
-  <form method="post">
+  <p>请使用已注册账号登录，不同身份拥有不同操作权限。</p>
+
+  <form method="post" class="form-grid">
     <label>用户名</label>
-    <input type="text" name="username" placeholder="例如 admin / donor / recipient" required />
+    <input type="text" name="username" placeholder="例如 admin / donor / recipient / staff" required autocomplete="username" />
+
     <label>密码</label>
-    <input type="password" name="password" placeholder="请输入密码" required />
+    <input type="password" name="password" placeholder="请输入密码" required autocomplete="current-password" />
+
     <input type="hidden" name="next" value="{{ next }}" />
-    <input type="submit" value="登录" />
+
+    <div class="full-width">
+      <input type="submit" value="登录" />
+    </div>
   </form>
-  <div class="helper-text" style="margin-top: 16px;">
-    <p>示例账号：</p>
+
+  <hr class="section-divider" />
+
+  <div class="helper-text">
+    <p><strong>示例账号</strong></p>
     <p>管理员：admin / admin123</p>
     <p>捐赠方：donor / donor123</p>
     <p>受赠方：recipient / recipient123</p>
-    <p>还没有账号？<a href="{{ url_for('register') }}">立即注册</a></p>
+    <p>机构员工：staff / staff123</p>
+    <p>中转仓库：warehouse / warehouse123</p>
+    <p>快递站：courier / courier123</p>
+    <p style="margin-top:10px;">还没有账号？<a href="{{ url_for('register') }}">立即注册</a></p>
   </div>
 </div>
+
 {% endblock %}

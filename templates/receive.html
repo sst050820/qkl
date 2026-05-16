@@ -1,13 +1,40 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="card">
-  <h2>受赠方签收</h2>
-  <p><a href="{{ url_for('user_portal') }}">← 返回用户入口</a></p>
-  <p>输入溯源码查询当前物品状态，确认收到后完成上链签收记录。</p>
-  <form method="get" class="search-row">
-    <input type="text" name="tracking_id" value="{{ tracking_id }}" placeholder="请输入溯源码" />
-    <input type="submit" value="查询" />
-  </form>
+  <div class="page-header">
+    <div>
+      <h2>我的待签收</h2>
+      <p>此处列出分配给您的待签收物品，点击任一物品进入签收流程。</p>
+    </div>
+    <div class="page-actions">
+      <a class="action-card small-card secondary" href="{{ url_for('track') }}">
+        <strong>溯源查询</strong>
+        <p>查看物品当前流转信息</p>
+      </a>
+    </div>
+  </div>
+
+  <p><a href="{{ url_for('user_portal') }}" class="action-link">← 返回用户入口</a></p>
+
+  {% if assigned_items %}
+  <div class="item-summary" style="margin-top:16px; padding:16px;">
+    <h3 style="margin-bottom:12px;">待签收物品</h3>
+    {% for assigned in assigned_items %}
+    <div class="assigned-item-card" style="border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:18px;">
+      <div>
+        <p><strong>溯源码：</strong><a href="{{ url_for('receive') }}?tracking_id={{ assigned.tracking_id }}">{{ assigned.tracking_id }}</a></p>
+        <p><strong>类别：</strong>{{ assigned.item_type }}</p>
+        <p><strong>捐赠者：</strong>{{ assigned.donor_name }}</p>
+      </div>
+      <div style="text-align:right;">
+        <p><span class="badge badge-info">{{ assigned.status }}</span></p>
+        <a class="btn btn-sm" href="{{ url_for('receive') }}?tracking_id={{ assigned.tracking_id }}#sign-form">立即签收</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   {% if item %}
   <div class="item-summary">
@@ -15,31 +42,52 @@
     <img class="preview-image" src="{{ photo_url }}" alt="物品照片" />
     {% endif %}
     <div>
-      <p><strong>当前状态：</strong>{{ item.event.status }}</p>
+      <p><strong>当前状态：</strong>
+        <span class="badge badge-info">{{ item.event.status }}</span>
+      </p>
       <p><strong>物品类别：</strong>{{ item.event.item_type }}</p>
       <p><strong>捐赠者：</strong>{{ item.event.donor_name }}</p>
+      {% if item.event.note %}
       <p><strong>备注：</strong>{{ item.event.note }}</p>
+      {% endif %}
       {% if recipient %}
-      <p><strong>历史签收：</strong>{{ recipient.recipient_name }} / {{ recipient.recipient_code }}</p>
+      <p style="margin-top:8px;"><strong>已有签收记录：</strong>{{ recipient.recipient_name }} · {{ recipient.recipient_code }}</p>
       {% endif %}
     </div>
   </div>
+
   {% if item.event.status == '运送中' %}
-  <form method="post">
+  <form id="sign-form" method="post" style="margin-top:4px;">
     <input type="hidden" name="tracking_id" value="{{ tracking_id }}" />
+
     <label>受赠方姓名</label>
-    <input type="text" name="recipient_name" placeholder="例如：山区学校编号-1002" />
+    <input type="text" name="recipient_name" placeholder="例如：山区学校 · 1002" required />
+
     <label>受赠方编号</label>
-    <input type="text" name="recipient_code" placeholder="请填写受赠方编号" />
+    <input type="text" name="recipient_code" placeholder="请填写受赠方编号" required />
+
     <label>收货地址</label>
-    <input type="text" name="address" placeholder="受赠地点/地址" />
-    <input type="submit" value="确认签收" />
+    <input type="text" name="address" placeholder="受赠地点或详细地址" required />
+
+    <div style="margin-top:22px;">
+      <input type="submit" value="确认签收" />
+    </div>
   </form>
   {% else %}
-  <p class="helper-text">当前物品尚未处于“运送中”状态，无法签收。请联系机构端继续推进流程。</p>
+  <div class="alert-card" style="margin-top:8px;">
+    当前物品状态为"<strong>{{ item.event.status }}</strong>"，只有状态为"运送中"时才能签收。
+    请联系机构端继续推进流程。
+  </div>
   {% endif %}
-  {% elif tracking_id %}
-  <p class="helper-text">未找到该溯源码的上链记录，请确认输入是否正确。</p>
+
+  {% elif item and tracking_id %}
+  <p class="helper-text" style="margin-top:12px;">未找到溯源码 <strong>{{ tracking_id }}</strong> 的上链记录，请确认输入是否正确。</p>
+  {% endif %}
+  {% if not assigned_items and not item %}
+  <div class="alert-card" style="margin-top:16px;">
+    当前暂无分配给您的待签收物品。请等待快递员送达，或联系系统管理员查看状态。
+  </div>
   {% endif %}
 </div>
+
 {% endblock %}
