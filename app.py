@@ -21,6 +21,8 @@ from database import (
     get_users_by_role,
     get_all_users,
     delete_user,
+    restore_user,
+    purge_user,
     init_db,
     save_donor,
     save_recipient,
@@ -236,9 +238,17 @@ def login_required(required_role=None):
             if not session.get("logged_in"):
                 flash("请先登录。", "warning")
                 return redirect(url_for("login", next=request.path))
-            if required_role and session.get("role") != required_role:
-                flash("当前账号无权访问该页面。", "danger")
-                return redirect(url_for("index"))
+            if required_role:
+                user_role = session.get("role")
+                # 支持传入字符串或可迭代的角色集合
+                if isinstance(required_role, (list, tuple, set)):
+                    if user_role not in required_role:
+                        flash("当前账号无权访问该页面。", "danger")
+                        return redirect(url_for("index"))
+                else:
+                    if user_role != required_role:
+                        flash("当前账号无权访问该页面。", "danger")
+                        return redirect(url_for("index"))
             return view(*args, **kwargs)
         return wrapped_view
     return decorator
@@ -719,13 +729,43 @@ def admin():
                 return redirect(url_for("admin"))
             user = get_user_by_username(delete_username)
             if not user:
-                flash(f"用户 {delete_username} 不存在。", "warning")
+                flash(f"用户 {delete_username} 不存在或已被删除。", "warning")
                 return redirect(url_for("admin"))
             if user.get("role") == "admin":
                 flash("管理员账号不可删除。", "warning")
                 return redirect(url_for("admin"))
-            delete_user(delete_username)
+            delete_user(delete_username, deleted_by=session.get("username"))
             flash(f"已删除用户账号：{delete_username}", "success")
+            return redirect(url_for("admin"))
+
+        # 恢复已删除用户
+        restore_username = request.form.get("restore_username")
+        if restore_username:
+            # 允许恢复已软删除的用户
+            user = get_user_by_username(restore_username, include_deleted=True)
+            if not user or not user.get("deleted_at"):
+                flash(f"用户 {restore_username} 不存在或未被删除。", "warning")
+                return redirect(url_for("admin"))
+            # 禁止恢复管理员账号由非 super-admin 恢复（这里保持简单：允许恢复非 admin）
+            restore_user(restore_username)
+            flash(f"已恢复用户账号：{restore_username}", "success")
+            return redirect(url_for("admin"))
+
+        # 永久删除（物理删除）
+        purge_username = request.form.get("purge_username")
+        if purge_username:
+            if purge_username == session.get("username"):
+                flash("不能永久删除当前登录管理员账号。", "warning")
+                return redirect(url_for("admin"))
+            user = get_user_by_username(purge_username, include_deleted=True)
+            if not user:
+                flash(f"用户 {purge_username} 不存在。", "warning")
+                return redirect(url_for("admin"))
+            if user.get("role") == "admin":
+                flash("管理员账号不可永久删除。", "warning")
+                return redirect(url_for("admin"))
+            purge_user(purge_username)
+            flash(f"已永久删除用户账号：{purge_username}", "success")
             return redirect(url_for("admin"))
 
         tracking_id = request.form.get("tracking_id")
@@ -788,6 +828,9 @@ def admin():
         )
     institutions = get_institutions()
     users = get_all_users()
+    # 包含已删除用户以便在管理界面提供恢复/永久删除操作
+    all_including_deleted = get_all_users(include_deleted=True)
+    deleted_users = [u for u in all_including_deleted if u.get("deleted_at")]
     return render_template(
         "admin.html",
         items=items,
@@ -796,6 +839,7 @@ def admin():
         filter_status=filter_status,
         institutions=institutions,
         users=users,
+        deleted_users=deleted_users,
     )
 
 

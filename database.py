@@ -54,7 +54,9 @@ def init_db():
         "role TEXT, "  # 用户角色：admin, donor, recipient, institution, warehouse, courier
         "org_name TEXT, "  # 机构名称（仅当 role 是 institution/warehouse/courier 时使用）
         "approved INTEGER DEFAULT 1, "  # 账号是否启用（兼容旧 institution 审批字段）
-        "created_at TEXT"  # 创建时间
+        "created_at TEXT, "  # 创建时间
+        "deleted_at TEXT, "  # 软删除时间（NULL 表示未删除）
+        "deleted_by TEXT"  # 删除者用户名（记录软删除发起者）
         ")"
     )
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -69,6 +71,17 @@ def init_db():
     if "approved" not in cols:
         try:
             cursor.execute("ALTER TABLE users ADD COLUMN approved INTEGER DEFAULT 1")
+        except Exception:
+            pass
+    # 兼容性：确保包含软删除相关列
+    if "deleted_at" not in cols:
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN deleted_at TEXT")
+        except Exception:
+            pass
+    if "deleted_by" not in cols:
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN deleted_by TEXT")
         except Exception:
             pass
     conn.commit()
@@ -211,18 +224,59 @@ def approve_institution(username):
     conn.close()
 
 
-def get_user_by_username(username):
-    """根据用户名查询用户。"""
+def get_user_by_username(username, include_deleted=False):
+    """根据用户名查询用户。
+
+    参数:
+      include_deleted: 为 True 时包括已软删除的用户记录。
+    """
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    if include_deleted:
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    else:
+        cursor.execute("SELECT * FROM users WHERE username = ? AND (deleted_at IS NULL OR deleted_at = '')", (username,))
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
 
 
-def delete_user(username):
-    """删除指定用户名的用户账号。"""
+def delete_user(username, deleted_by=None):
+    """软删除指定用户名的用户账号：标记 `deleted_at` 与 `deleted_by`，并清理 donors 表中的 assignment 引用。"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        "UPDATE users SET deleted_at = ?, deleted_by = ? WHERE username = ?",
+        (now, deleted_by, username),
+    )
+    cursor.execute(
+        "UPDATE donors SET assigned_courier = NULL WHERE assigned_courier = ?",
+        (username,),
+    )
+    cursor.execute(
+        "UPDATE donors SET assigned_warehouse = NULL WHERE assigned_warehouse = ?",
+        (username,),
+    )
+    cursor.execute(
+        "UPDATE donors SET assigned_recipient = NULL WHERE assigned_recipient = ?",
+        (username,),
+    )
+    conn.commit()
+    conn.close()
+
+
+def restore_user(username):
+    """恢复被软删除的用户（清除 deleted_at / deleted_by）。"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET deleted_at = NULL, deleted_by = NULL WHERE username = ?", (username,))
+    conn.commit()
+    conn.close()
+
+
+def purge_user(username):
+    """永久删除用户：物理删除 users 记录并清理 donors 中的 assignment 引用。"""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM users WHERE username = ?", (username,))
@@ -246,17 +300,24 @@ def get_users_by_role(role):
     """返回指定角色的用户列表。"""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE role = ? ORDER BY created_at ASC", (role,))
+    cursor.execute("SELECT * FROM users WHERE role = ? AND (deleted_at IS NULL OR deleted_at = '') ORDER BY created_at ASC", (role,))
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 
-def get_all_users():
-    """返回系统中所有用户（按创建时间排序）。"""
+def get_all_users(include_deleted=False):
+    """返回系统中所有用户（按创建时间排序）。
+
+    参数:
+      include_deleted: 若为 True 则返回包括已软删除的用户。
+    """
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users ORDER BY created_at ASC")
+    if include_deleted:
+        cursor.execute("SELECT * FROM users ORDER BY created_at ASC")
+    else:
+        cursor.execute("SELECT * FROM users WHERE (deleted_at IS NULL OR deleted_at = '') ORDER BY created_at ASC")
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
