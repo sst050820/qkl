@@ -72,7 +72,7 @@ func validateTransition(current, next string) bool {
 // 链码函数
 // ─────────────────────────────────────────────
 
-// InitLedger 初始化账本（创世，对应实验二的 InitLedger 调用）
+// InitLedger 初始化账本
 // 调用方式：peer chaincode invoke ... -c '{"function":"InitLedger","Args":[]}'
 func (d *DonationChaincode) InitLedger(ctx contractapi.TransactionContextInterface) error {
 	log.Println("[InitLedger] 公益捐赠溯源链码已初始化")
@@ -156,7 +156,7 @@ func (d *DonationChaincode) UpdateStatus(
 	return ctx.GetStub().PutState(trackingID, updated)
 }
 
-// ConfirmReceipt 受赠方签收（终态写入，对应实验四的 TransferAsset）
+// ConfirmReceipt 受赠方签收
 // 调用方式：peer chaincode invoke ... -c '{"function":"ConfirmReceipt","Args":["ID","李**","签收确认"]}'
 func (d *DonationChaincode) ConfirmReceipt(
 	ctx contractapi.TransactionContextInterface,
@@ -193,7 +193,7 @@ func (d *DonationChaincode) ConfirmReceipt(
 	return ctx.GetStub().PutState(trackingID, updated)
 }
 
-// GetDonation 按溯源码查询最新状态（对应实验四的 ReadAsset）
+// GetDonation 按溯源码查询最新状态
 // 调用方式：peer chaincode query ... -c '{"Args":["GetDonation","ID"]}'
 func (d *DonationChaincode) GetDonation(
 	ctx contractapi.TransactionContextInterface,
@@ -214,7 +214,7 @@ func (d *DonationChaincode) GetDonation(
 	return &event, nil
 }
 
-// GetAllDonations 查询账本中全部捐赠记录（对应实验二的 GetAllAssets）
+// GetAllDonations 查询账本中全部捐赠记录
 // 调用方式：peer chaincode query ... -c '{"Args":["GetAllDonations"]}'
 func (d *DonationChaincode) GetAllDonations(
 	ctx contractapi.TransactionContextInterface,
@@ -241,7 +241,7 @@ func (d *DonationChaincode) GetAllDonations(
 	return results, nil
 }
 
-// GetDonationHistory 查询某溯源码的完整历史记录（对应实验二的账本追踪操作）
+// GetDonationHistory 查询某溯源码的完整历史记录
 // 调用方式：peer chaincode query ... -c '{"Args":["GetDonationHistory","ID"]}'
 // 利用 Fabric 原生的 GetHistoryForKey API，返回该 Key 上所有历史版本
 func (d *DonationChaincode) GetDonationHistory(
